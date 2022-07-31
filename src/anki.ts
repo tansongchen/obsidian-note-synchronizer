@@ -22,11 +22,6 @@ export interface Note {
 	tags: Array<string>,
 }
 
-interface NoteAndID {
-	note: Note,
-	identifier: number | null
-}
-
 class Anki {
 	port = 8765;
 
@@ -39,7 +34,6 @@ class Anki {
 			params: params
 		};
 		const axiosResponse = await axios.post<responseType, AxiosResponse<responseType, requestType>, requestType>(`http://127.0.0.1:${this.port}`, request);
-		console.log(axiosResponse);
 		const response = axiosResponse.data;
 		if (response.error) {
 			throw response.error;

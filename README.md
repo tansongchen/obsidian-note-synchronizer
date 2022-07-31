@@ -1,10 +1,16 @@
 # Obsidian Anki 同步
 
+## 特性
 
+- 支持任意 Anki 笔记类型，可将 Anki 的笔记类型导入为 Obsidian 笔记模板
+- Anki 笔记与 Obsidian 笔记一一对应，Anki 牌组与 Obsidian 文件夹一一对应，Anki tags 与 Obsidian tags 一一对应
+- 导入 Anki 时插入 Obsidian 链接方便卡片学习时跳转
+
+注：本插件仅将 Markdown 文本原封不动导入 Anki，需要使用 [Markdown and KaTeX Support](https://ankiweb.net/shared/info/1087328706) 或类似插件自行配置 Anki 中的 Markdown 渲染。
 
 ## 安装
 
-下载 [压缩包]()，在你的知识库目录下面的 `.obsidian/plugins` 新建一个文件夹 `obsidian-anki-synchronizer`，然后把解压得到的三个文件放进去。重启 Obsidian。
+下载 [压缩包](https://github.com/tansongchen/obsidian-anki-synchronizer/releases/download/v0.0.1/dist.zip)，在你的知识库目录下面的 `.obsidian/plugins` 新建一个文件夹 `obsidian-anki-synchronizer`，然后把解压得到的三个文件放进去。重启 Obsidian。
 
 例如，我这里的目录是 `/Users/tansongchen/Library/Mobile Documents/iCloud~md~obsidian/Documents/卡片盒/.obsidian/plugins/obsidian-anki-synchronizer`
 
@@ -14,7 +20,7 @@
 
 ### 提取模板
 
-首次安装后运行命令 Synchronize，会提取 Anki 中所有的笔记类型到当前知识库的模板目录下，对每个笔记类型生成一个模板文件。所有模板文件都有这样的 YAML 前言：
+首次安装后运行命令 Import Note Types，会提取 Anki 中所有的笔记类型到当前知识库的模板目录下，对每个笔记类型生成一个模板文件。所有模板文件都有这样的 YAML 前言：
 
 ```yaml
 type: 问答题
@@ -56,4 +62,4 @@ date: {{date}} {{time}}
 
 ### 同步笔记
 
-再次运行命令 Synchronize。如果没有按照预想的生成 Anki 中的笔记，请打开调试控制台（Option Command I）并向作者报告控制台中的输出。
+运行命令 Synchronize。如果没有按照预想的生成 Anki 中的笔记，请打开调试控制台（Option Command I）并向作者报告控制台中的输出。
