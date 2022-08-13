@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-anki-synchronizer",
 	"name": "Anki Synchronizer",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"minAppVersion": "0.14.0",
 	"description": "This is a plugin for exporting Obsidian contents to Anki.",
 	"author": "Songchen Tan",

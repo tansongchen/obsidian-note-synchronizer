@@ -3,13 +3,14 @@ import Anki from 'src/anki';
 import { MD5 } from 'object-hash';
 import { assert } from 'console';
 import { Note, getYAMLAndBody, Metadata } from 'src/note';
+import { locale } from 'src/lang';
 
 interface Settings {
-	mySetting: string;
+	render: boolean;
 }
 
 const DEFAULT_SETTINGS: Settings = {
-	mySetting: 'default'
+	render: false,
 }
 
 export default class AnkiSynchronizer extends Plugin {
@@ -21,7 +22,6 @@ export default class AnkiSynchronizer extends Plugin {
 	templatesFolder: TFolder;
 
 	async onload() {
-		console.log('Loading plugin...');
 		this.anki = new Anki();
 		this.settings = Object.assign({}, DEFAULT_SETTINGS);
 		this.state = {};
@@ -34,36 +34,33 @@ export default class AnkiSynchronizer extends Plugin {
 
 		this.addCommand({
 			id: 'synchronize',
-			name: 'Synchronize',
+			name: locale.synchronizeCommandName,
 			callback: async () => await this.synchronize()
 		});
 
 		this.addCommand({
 			id: 'import',
-			name: 'Import Note Types',
+			name: locale.importCommandName,
 			callback: async () => await this.importNoteTypes()
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		// this.addSettingTab(new AnkiSynchronizerSettingTab(this.app, this));
+		this.addSettingTab(new AnkiSynchronizerSettingTab(this.app, this));
+		console.log(locale.onLoad);
 	}
 
 	async onunload() {
-		console.log('Unloading plugin...');
 		await this.saveAll();
+		console.log(locale.onUnload);
 	}
 
 	async loadAll() {
-		const { settings, state, noteTypes } = await this.loadData();
-		if (settings) {
+		const data = await this.loadData();
+		if (data !== null) {
+			const { settings, state, noteTypes } = data;
 			Object.assign(this.settings, settings);
-		}
-		if (state) {
 			for (const [key, value] of Object.entries(state)) {
 				this.state[parseInt(key)] = value;
 			}
-		}
-		if (noteTypes) {
 			Object.assign(this.noteTypes, noteTypes);
 		}
 	}
@@ -77,7 +74,17 @@ export default class AnkiSynchronizer extends Plugin {
 	}
 
 	async synchronize() {
-		new Notice('Synchronizing to Anki...');
+		new Notice(locale.synchronizeStartNotice);
+		try {
+			const version = await this.anki.version();
+			if (version !== 6) {
+				new Notice(locale.synchronizeBadAnkiConnectNotice, 5000);
+				return;
+			}
+		} catch (e) {
+			new Notice(locale.synchronizeAnkiConnectUnavailableNotice, 5000);
+			return;
+		}
 		const allFiles = this.app.vault.getMarkdownFiles();
 		const allID = new Set(Object.keys(this.state).map(Number));
 		for (const file of allFiles) {
@@ -96,22 +103,26 @@ export default class AnkiSynchronizer extends Plugin {
 			}
 			// now it is a valid file
 			const metadata = yaml as Metadata;
-			console.log('Markdown file: ', file.path)
-			console.log(metadata);
 			const note = new Note(this, file, metadata, body);
 			if (this.state.hasOwnProperty(metadata.id)) { // existing file
 				const { path, hash, tags } = this.state[metadata.id];
 				if (path !== file.path) {
 					const { cards } = (await this.anki.notesInfo([metadata.id]))[0];
 					const deck = note.renderDeckName();
-					console.log('Change deck');
+					console.log(`Changing deck for ${file.path}`);
 					console.log(cards, deck);
-					await this.anki.changeDeck(cards, deck);
+					try {
+						await this.anki.changeDeck(cards, deck);
+					} catch (error) {
+						console.log(error, ', try creating');
+						await this.anki.createDeck(deck);
+						await this.anki.changeDeck(cards, deck);
+					}
 					this.state[metadata.id].path = file.path;
 				}
 				if (hash !== MD5(body.join('\n'))) {
 					const fields = note.parseFields();
-					console.log('Update fields')
+					console.log(`Updating fields for ${file.path}`)
 					console.log(metadata.id, fields);
 					await this.anki.updateFields(metadata.id, fields);
 					this.state[metadata.id].hash = MD5(body.join('\n'));
@@ -120,12 +131,12 @@ export default class AnkiSynchronizer extends Plugin {
 					const tagsToAdd = metadata.tags.filter(x => !tags.contains(x));
 					const tagsToRemove = tags.filter(x => !metadata.tags.contains(x));
 					if (tagsToAdd.length) {
-						console.log('Add tags');
+						console.log(`Adding tags for ${file.path}`);
 						console.log(tagsToAdd);
 						await this.anki.addTagsToNotes([metadata.id], tagsToAdd);
 					}
 					if (tagsToRemove.length) {
-						console.log('Remove tags');
+						console.log(`Removing tags for ${file.path}`);
 						console.log(tagsToRemove);
 						await this.anki.removeTagsFromNotes([metadata.id], tagsToRemove);
 					}
@@ -139,9 +150,16 @@ export default class AnkiSynchronizer extends Plugin {
 					fields: note.parseFields(),
 					tags: metadata.tags
 				};
-				console.log('Add note');
+				console.log(`Adding note for ${file.path}`);
 				console.log(ankiNote);
-				const id = await this.anki.addNote(ankiNote);
+				let id = 0;
+				try {
+					id = await this.anki.addNote(ankiNote);
+				} catch (error) {
+					console.log(error, ', try creating');
+					await this.anki.createDeck(ankiNote.deckName);
+					id = await this.anki.addNote(ankiNote);
+				}
 				note.addID(id);
 				this.state[id] = {path: file.path, hash: MD5(body.join('\n')), tags: metadata.tags};
 			} else { // out of sync, ignore
@@ -151,27 +169,34 @@ export default class AnkiSynchronizer extends Plugin {
 		for (const id of allID) {
 			delete this.state[id];
 		}
-		new Notice('Successfully synchronized to Anki!');
+		new Notice(locale.synchronizeSuccessNotice);
 	}
 
 	async importNoteTypes() {
-		new Notice('Importing note types from Anki...');
+		new Notice(locale.importStartNotice);
+		const allNoteTypeNames = new Set(Object.keys(this.noteTypes));
 		const noteTypeNames = await this.anki.noteTypes();
 		for (const noteType of noteTypeNames) {
 			const fields = await this.anki.fields(noteType);
-			this.noteTypes[noteType] = fields;
 			const templatePath = `${this.templatesPath}/${noteType}.md`
-			const maybeTemplate = this.app.vault.getAbstractFileByPath(templatePath);
-			if (maybeTemplate === null) {
-				this.app.vault.create(templatePath, generateTemplate(noteType, fields));
-			} else if (maybeTemplate instanceof TFolder) {
-					throw new Error("Folder cannot exist in template folder");
+			if (this.noteTypes.hasOwnProperty(noteType)) {
+				if (fields !== this.noteTypes[noteType]) {
+					const maybeTemplate = this.app.vault.getAbstractFileByPath(templatePath);
+					this.app.vault.modify(maybeTemplate as TFile, generateTemplate(noteType, fields));
+				}
+				allNoteTypeNames.delete(noteType);
 			} else {
-				assert(maybeTemplate instanceof TFile);
-				this.app.vault.modify(maybeTemplate as TFile, generateTemplate(noteType, fields));
+				this.app.vault.create(templatePath, generateTemplate(noteType, fields));
 			}
+			this.noteTypes[noteType] = fields;
 		}
-		new Notice('Successfully imported note types from Anki!');
+		for (const noteType of allNoteTypeNames) {
+			delete this.noteTypes[noteType];
+			const templatePath = `${this.templatesPath}/${noteType}.md`;
+			const template = this.app.vault.getAbstractFileByPath(templatePath);
+			this.app.vault.delete(template);
+		}
+		new Notice(locale.importSuccessNotice);
 	}
 }
 
@@ -197,18 +222,15 @@ class AnkiSynchronizerSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
+		containerEl.createEl('h2', {text: locale.settingTabHeader});
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+			.setName(locale.settingRenderName)
+			.setDesc(locale.settingRenderDescription)
+			.addToggle(v => v
+				.setValue(this.plugin.settings.render)
 				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveAll();
+					this.plugin.settings.render = value;
 				}));
 	}
 }

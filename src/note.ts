@@ -1,6 +1,9 @@
 import { assert } from "console";
 import { TFile, parseYaml, TAbstractFile, stringifyYaml } from "obsidian";
 import AnkiSynchronizer from "main";
+import MarkdownIt from "markdown-it";
+
+const mdit = new MarkdownIt();
 
 export interface Metadata {
 	type: string,
@@ -50,7 +53,7 @@ export class Note {
 
 	dump() {
 		const yaml = stringifyYaml(this.metadata);
-		return `---\n${yaml}---\n${this.body.join('\n')}\n`
+		return `---\n${yaml}---\n${this.body.join('\n')}`
 	}
 
 	renderBacklink = (basename: string) => {
@@ -59,34 +62,36 @@ export class Note {
 	}
 
 	transformField(content: string) {
-		return content.replace(/\[\[(\w+)\]\]/, (match, p) => {
+		const md = content.replace(/\[\[(\w+)\]\]/, (match, p) => {
 			const backlink = this.renderBacklink(p);
 			return `[${p}](${backlink})`
 		});
+		if (!this.plugin.settings.render) {
+			return md;
+		}
+		return mdit.render(md);
 	}
 
 	parseFields() {
 		const fieldNames = this.plugin.noteTypes[this.metadata.type];
 		assert(fieldNames.length >= 2);
-		const fields: Record<string, string> = {};
-		fields[fieldNames[0]] = this.renderBacklink(this.file.basename);
-		let fidx = 1;
+		const fields: string[] = [this.renderBacklink(this.file.basename)];
 		let buffer: Array<string> = [];
 		for (const line of this.body) {
 			if (line.slice(0, 2) === '# ') {
-				fields[fieldNames[fidx]] = this.transformField(buffer.join('\n').trim() + '\n');
+				fields.push(buffer.join('\n'));
 				buffer = [];
-				fidx += 1;
-				assert(line.slice(2).trim() === fieldNames[fidx])
 			} else {
 				buffer.push(line)
 			}
 		}
-		fields[fieldNames[fidx]] = this.transformField(buffer.join('\n').trim() + '\n');
-		return fields;
+		fields.push(buffer.join('\n'));
+		const result: Record<string, string> = {};
+		fieldNames.forEach((key, index) => result[key] = this.transformField(fields[index]));
+		return result;
 	}
 
 	renderDeckName() {
-		return (this.file as TAbstractFile).path.split('/').slice(0, -1).join('::');
+		return (this.file as TAbstractFile).path.split('/').slice(0, -1).join('::') || 'Obsidian';
 	}
 }

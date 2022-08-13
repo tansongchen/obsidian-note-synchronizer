@@ -41,13 +41,16 @@ class Anki {
 		return response.result;
 	}
 
+	async version() {
+		return this.invoke<undefined, number>('version', undefined);
+	}
+
 	async noteTypes() {
 		return this.invoke<undefined, string[]>('modelNames', undefined);
 	}
 
 	async fields(noteType: string) {
-		type p = {modelName: string};
-		return this.invoke<p, string[]>('modelFieldNames', {
+		return this.invoke<{modelName: string}, string[]>('modelFieldNames', {
 			modelName: noteType
 		})
 	}
@@ -55,12 +58,6 @@ class Anki {
 	async addNote(note: Note) {
 		return this.invoke<{note: Note}, number>('addNote', {
 			note: note
-		});
-	}
-
-	async addNotes(notes: Array<Note>) {
-		return this.invoke<{notes: Array<Note>}, number>('addNote', {
-			notes: notes
 		});
 	}
 
@@ -99,6 +96,12 @@ class Anki {
 	async notesInfo(noteIds: Array<number>) {
 		return this.invoke<{notes: Array<number>}, Array<{cards: Array<number>}>>('notesInfo', {
 			notes: noteIds
+		})
+	}
+
+	async createDeck(deckName: string) {
+		return this.invoke<{deck: string}, number>('createDeck', {
+			deck: deckName
 		})
 	}
 }
