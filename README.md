@@ -1,65 +1,49 @@
-# Obsidian Anki 同步
+# Obsidian Anki Synchronizer
 
-## 特性
+See Chinese README [here](README.zh.md).
 
-- 支持任意 Anki 笔记类型，可将 Anki 的笔记类型导入为 Obsidian 笔记模板
-- Anki 笔记与 Obsidian 笔记一一对应，Anki 牌组与 Obsidian 文件夹一一对应，Anki tags 与 Obsidian tags 一一对应
-- 导入 Anki 时插入 Obsidian 链接方便卡片学习时跳转
+## Features
 
-注：本插件仅将 Markdown 文本原封不动导入 Anki，需要使用 [Markdown and KaTeX Support](https://ankiweb.net/shared/info/1087328706) 或类似插件自行配置 Anki 中的 Markdown 渲染。
+- Support arbitrary Anki note type by importing Anki note types as Obsidian note templates
+- 1:1 correspondence between Anki notes and Obsidian notes, Anki decks and Obsidian folders, Anki tags and Obsidian tags
+- Converting Obsidian wikilinks to Markdown links (Obsidian URL)
 
-## 安装
+The plugin works in two modes:
 
-下载 [压缩包](https://github.com/tansongchen/obsidian-anki-synchronizer/releases/download/v0.0.1/dist.zip)，在你的知识库目录下面的 `.obsidian/plugins` 新建一个文件夹 `obsidian-anki-synchronizer`，然后把解压得到的三个文件放进去。重启 Obsidian。
+- Markdown mode: importing markdown content into Anki as-is, without rendering into HTML. In order to view rendered content in Anki, you need [Markdown and KaTeX Support](https://ankiweb.net/shared/info/1087328706) or similar Anki plugins to get real-time rendering.
+- HTML mode: importing rendered HTML into Anki.
 
-例如，我这里的目录是 `/Users/tansongchen/Library/Mobile Documents/iCloud~md~obsidian/Documents/卡片盒/.obsidian/plugins/obsidian-anki-synchronizer`
+## Installation
 
-## 使用
+The plugin is currently in alpha stage and therefore not on the Obsidian marketplace. Therefore, manual installation is required.
 
-使用前需要首先打开核心插件中的「模板」插件。
+Download the file `dist.zip` from [release page](https://github.com/tansongchen/obsidian-anki-synchronizer/releases/download/v0.0.1/dist.zip), create a new folder `obsidian-anki-synchronizer` under the `.obsidian/plugins` directory in your vault, and put the three files extracted into this folder. Reload obsidian.
 
-### 提取模板
+For example, the plugin path on my computer is `/Users/tansongchen/Library/Mobile Documents/iCloud~md~obsidian/Documents/卡片盒/.obsidian/plugins/obsidian-anki-synchronizer`.
 
-首次安装后运行命令 Import Note Types，会提取 Anki 中所有的笔记类型到当前知识库的模板目录下，对每个笔记类型生成一个模板文件。所有模板文件都有这样的 YAML 前言：
+## Usage
+
+This plugin depends on the core plugin "Templates". You need to enable it for this plugin to work.
+
+### Import Note Types
+
+Run command `Import Note Types` to import all available note types in Anki to the template folder in the current vault, generating a template markdown file for each of the note types. All template markdown files generated have some YAML front matter like this:
 
 ```yaml
-type: 问答题
+type: Basic
 id: 0
 tags: []
 date: {{date}} {{time}}
 ```
 
-其中 `type` 是 Anki 笔记类型的名字。如果这个笔记类型有三个或更多的字段，那么第三个及以后的字段名称会以一级标题的形式出现在正文。例如，如果笔记类型「费曼笔记」的字段是「概念、定义、实例、类比、备注」，则生成的模板文件形如：
+Where `type` is the note type name in Anki. If this note type happen to have 3 or more fields, the third field and all other fields after that will appear as `h1` title in the markdown file. 
 
-```markdown
----
-type: 费曼笔记
-id: 0
-tags: []
-date: {{date}} {{time}}
----
+### Edit Notes
 
+When creating notes with generated template files, please write the content of the first field into the filename, and the second field right after the YAML front matter, and other fields below their corresponding `h1` title.
 
+The way that notes are organized in Obsidian will be mirrored in Anki using decks. For example, the file `/learning/note.md` will be synced to the `learning` deck in Anki, and the file `/learning/project 1/note.md` will be synced to `learning::project 1` deck in Anki. Toplevel files will be synced to a special deck `Obsidian`. If the supposed deck doesn't exist in Anki, it will be created.
 
-# 实例
+### Synchonize notes
 
-
-
-# 类比、比较与对比
-
-
-
-# 备注
-
-
-```
-
-### 编辑笔记
-
-使用本插件生成的模板文件创建一个新笔记时，请将笔记的第一个字段写在文件名中（第一个字段一般是概念名称），然后第二个字段写在 YAML 前言的后面，第三个及之后的字段写在相应的一级标题下。
-
-笔记所在的文件夹默认是你希望卡片所在的牌组，例如 `/学习/笔记.md` 将会被同步到 Anki 的 `学习` 牌组中，`/学习/项目 1/笔记.md` 将会被同步到 Anki 的 `学习::项目 1` 牌组中。
-
-### 同步笔记
-
-运行命令 Synchronize。如果没有按照预想的生成 Anki 中的笔记，请打开调试控制台（Option Command I）并向作者报告控制台中的输出。
+Run command `Synchronize`. If unexpected behavior happens, please toggle the developer console and report the output there.
