@@ -1,97 +1,74 @@
 import { assert } from "console";
 import { TFile, parseYaml, TAbstractFile, stringifyYaml } from "obsidian";
-import AnkiSynchronizer from "main";
-import MarkdownIt from "markdown-it";
 
-const mdit = new MarkdownIt();
-
-export interface Metadata {
-	type: string,
-	id: number,
-	tags: Array<string>
+export interface FrontMatter {
+    mid: number,
+    nid: number,
+    tags: string[]
 }
 
-export function getYAMLAndBody(raw: string): [object, string[]] {
-	const lines = raw.split('\n');
-	assert(lines.length >= 2 && lines[0].trim() == '---');
-	const yamlLines: string[] = [];
-	let index = 1;
-	while (lines[index].trim() !== '---') {
-		yamlLines.push(lines[index]);
-		index += 1;
-		if (index == lines.length) {
-			throw new Error("Bad YAML");
-		}
-	}
-	const yaml = parseYaml(yamlLines.join('\n')) as object;
-	const body = lines.slice(index + 1);
-	return [yaml, body]
+export function getFrontMatterAndBody(raw: string): [object, string[]] {
+    const lines = raw.split('\n');
+    assert(lines.length >= 2 && lines[0].trim() == '---');
+    let index = 1;
+    while (lines[index].trim() !== '---') {
+        index += 1;
+        if (index == lines.length) {
+            throw new Error("Bad YAML");
+        }
+    }
+    const frontMatter = parseYaml(lines.slice(1, index).join('\n'));
+    const body = lines.slice(index + 1);
+    return [frontMatter, body]
 }
 
 export class Note {
-	file: TFile;
-	metadata: Metadata
-	body: string[];
-	plugin: AnkiSynchronizer;
+    file: TFile;
+    mid: number;
+    nid: number;
+    tags: string[];
+    extras: object;
+    fields: Record<string, string>;
 
-	constructor(plugin: AnkiSynchronizer, file: TFile, metadata: Metadata, body: string[]) {
-		this.plugin = plugin;
-		this.file = file;
-		this.metadata = metadata;
-		this.body = body;
-	}
+    constructor(file: TFile, frontMatter: FrontMatter, body: string[], fieldNames: string[]) {
+        this.file = file;
+        const { mid, nid, tags, ...extras } = frontMatter;
+        this.mid = mid;
+        this.nid = nid;
+        this.tags = tags;
+        this.extras = extras;
+        this.fields = this.parseFields(fieldNames, body);
+    }
 
-	isNew() {
-		return this.metadata.id === 0;
-	}
+    dump() {
+        const frontMatter = stringifyYaml(Object.assign({
+            mid: this.mid,
+            nid: this.nid || 0,
+            tags: this.tags
+        }, this.extras));
+        const fieldNames = Object.keys(this.fields);
+        const frontMatterString = `---\n${frontMatter}---\n`;
+        return frontMatterString + this.fields[fieldNames[1]] + fieldNames.slice(2).map(s => `\n# ${s}\n${this.fields[s]}`).join('');
+    }
 
+    parseFields(fieldNames: string[], body: string[]) {
+        const fieldContents: string[] = [this.file.basename];
+        let buffer: Array<string> = [];
+        for (const line of body) {
+            if (line.slice(0, 2) === '# ') {
+                fieldContents.push(buffer.join('\n'));
+                buffer = [];
+            } else {
+                buffer.push(line)
+            }
+        }
+        fieldContents.push(buffer.join('\n'));
+        const fields: Record<string, string> = {};
+        fieldNames.map((v, i) => fields[v] = fieldContents[i]);
+        return fields;
+    }
 
-	addID(id: number) {
-		this.metadata.id = id;
-		this.plugin.app.vault.modify(this.file, this.dump())
-	}
-
-	dump() {
-		const yaml = stringifyYaml(this.metadata);
-		return `---\n${yaml}---\n${this.body.join('\n')}`
-	}
-
-	renderBacklink = (basename: string) => {
-		const url = "obsidian://open?vault=" + encodeURIComponent(this.plugin.app.vault.getName()) + String.raw`&file=` + encodeURIComponent(basename);
-		return `[${basename}](${url})`
-	}
-
-	transformField(content: string) {
-		const md = content.replace(/\[\[(\w+)\]\]/, (match, p) => {
-			const backlink = this.renderBacklink(p);
-			return `[${p}](${backlink})`
-		});
-		if (!this.plugin.settings.render) {
-			return md;
-		}
-		return mdit.render(md);
-	}
-
-	parseFields() {
-		const fieldNames = this.plugin.noteTypes[this.metadata.type];
-		assert(fieldNames.length >= 2);
-		const fields: string[] = [this.renderBacklink(this.file.basename)];
-		let buffer: Array<string> = [];
-		for (const line of this.body) {
-			if (line.slice(0, 2) === '# ') {
-				fields.push(buffer.join('\n'));
-				buffer = [];
-			} else {
-				buffer.push(line)
-			}
-		}
-		fields.push(buffer.join('\n'));
-		const result: Record<string, string> = {};
-		fieldNames.forEach((key, index) => result[key] = this.transformField(fields[index]));
-		return result;
-	}
-
-	renderDeckName() {
-		return (this.file as TAbstractFile).path.split('/').slice(0, -1).join('::') || 'Obsidian';
-	}
+    renderDeckName() {
+        return (this.file as TAbstractFile).path.split('/').slice(0, -1).join('::') || 'Obsidian';
+    }
 }

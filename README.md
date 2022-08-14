@@ -17,26 +17,54 @@ The plugin works in two modes:
 
 The plugin is currently in alpha stage and therefore not on the Obsidian marketplace. Therefore, manual installation is required.
 
-Download the file `dist.zip` from [release page](https://github.com/tansongchen/obsidian-anki-synchronizer/releases/download/v0.0.1/dist.zip), create a new folder `obsidian-anki-synchronizer` under the `.obsidian/plugins` directory in your vault, and put the three files extracted into this folder. Reload obsidian.
+Download the file `dist.zip` from [release page](https://github.com/tansongchen/obsidian-anki-synchronizer/releases), create a new folder `obsidian-anki-synchronizer` under the `.obsidian/plugins` directory in your vault, and put the three files extracted into this folder. Reload obsidian.
 
 For example, the plugin path on my computer is `/Users/tansongchen/Library/Mobile Documents/iCloud~md~obsidian/Documents/卡片盒/.obsidian/plugins/obsidian-anki-synchronizer`.
 
-## Usage
+## Setup
 
-This plugin depends on the core plugin "Templates". You need to enable it for this plugin to work.
+Before running this plugin, make sure that the following requirements are met:
+
+### Enable Obsidian plugin "Templates"
+
+This plugin depends on the core plugin "Templates". You need to enable it for this plugin to work. Go to the Obsidian settings "Core Plugins" tab and enable "Templates".
+
+### Install and configure Anki Connect
+
+Install [Anki Connect](https://ankiweb.net/shared/info/2055492159) in the same way as other Anki plugins. After installation, navigate to `Tools -> Addons -> AnkiConnect -> Config`, paste the following text:
+
+```json
+{
+    "apiKey": null,
+    "apiLogPath": null,
+    "webBindAddress": "127.0.0.1",
+    "webBindPort": 8765,
+    "webCorsOrigin": "http://localhost",
+    "webCorsOriginList": [
+        "http://localhost",
+        "app://obsidian.md"
+    ]
+}
+```
+
+### Restart Anki and navigate to the desired profile
+
+Restart Anki and select the profile you want to sync with Obsidian. Right now, you can only select one Anki profile to sync with obsidian.
+
+## Usage
 
 ### Import Note Types
 
 Run command `Import Note Types` to import all available note types in Anki to the template folder in the current vault, generating a template markdown file for each of the note types. All template markdown files generated have some YAML front matter like this:
 
 ```yaml
-type: Basic
-id: 0
+mid: 16xxxxxxxxxxx
+nid: 0
 tags: []
 date: {{date}} {{time}}
 ```
 
-Where `type` is the note type name in Anki. If this note type happen to have 3 or more fields, the third field and all other fields after that will appear as `h1` title in the markdown file. 
+Where `mid` is a number representing the note type ID in Anki. If this note type happen to have 3 or more fields, the third field and all other fields after that will appear as `h1` title in the markdown file. 
 
 ### Edit Notes
 

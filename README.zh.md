@@ -19,27 +19,54 @@
 
 例如，我这里的目录是 `/Users/tansongchen/Library/Mobile Documents/iCloud~md~obsidian/Documents/卡片盒/.obsidian/plugins/obsidian-anki-synchronizer`。
 
-## 使用
+## 配置
 
-使用前需要首先打开核心插件中的「模板」插件。
+在运行本插件之前，您需要确定您的环境满足以下要求：
+
+### 启用 Obsidian 核心插件「模板」
+
+本插件依赖于核心插件「模板」来确定应该将 Anki 笔记模板生成到哪个文件夹中。您需要在 Obsidian 设置页面的「核心插件」选项中启用「模板」。
+### 安装并配置 Anki Connect
+
+像其他 Anki 插件一样安装 [Anki Connect](https://ankiweb.net/shared/info/2055492159)。安装完成后，在「工具 - 插件 - Anki Connect - 配置」中粘贴以下文本：
+
+```json
+{
+    "apiKey": null,
+    "apiLogPath": null,
+    "webBindAddress": "127.0.0.1",
+    "webBindPort": 8765,
+    "webCorsOrigin": "http://localhost",
+    "webCorsOriginList": [
+        "http://localhost",
+        "app://obsidian.md"
+    ]
+}
+```
+
+### Anki 处于打开状态并切换到需要同步的 Anki 用户
+
+重启 Anki，选取您希望与 Obsidian 同步的用户并进入。目前您只能选择将 Obsidian 笔记同步到一个 Anki 用户的资料中，请确保您每次使用本插件时 Anki 打开的都是同一用户。
+
+## 使用
 
 ### 提取模板
 
 首次安装后运行命令「导入笔记类型」，会提取 Anki 中所有的笔记类型到当前知识库的模板目录下，对每个笔记类型生成一个模板文件。所有模板文件都有这样的 YAML 前言：
 
 ```yaml
-type: 问答题
-id: 0
+mid: 16xxxxxxxxxxx
+nid: 0
 tags: []
 date: {{date}} {{time}}
 ```
 
-其中 `type` 是 Anki 笔记类型的名字。如果这个笔记类型有三个或更多的字段，那么第三个及以后的字段名称会以一级标题的形式出现在正文。例如，如果笔记类型「费曼笔记」的字段是「概念、定义、实例、类比、备注」，则生成的模板文件形如：
+其中 `mid` 是一个以 16 开头的数字表示 Anki 笔记类型的 ID。如果这个笔记类型有三个或更多的字段，那么第三个及以后的字段名称会以一级标题的形式出现在正文。例如，如果笔记类型「费曼笔记」的字段是「概念、定义、实例、类比、备注」，则生成的模板文件形如：
 
 ```markdown
 ---
-type: 费曼笔记
-id: 0
+mid: 1654893531468
+nid: 0
 tags: []
 date: {{date}} {{time}}
 ---
