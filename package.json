@@ -1,13 +1,12 @@
 {
 	"name": "obsidian-anki-synchronizer",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "This is a plugin for exporting Obsidian contents to Anki.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"dist": "zip dist.zip main.js manifest.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],
 	"author": "",

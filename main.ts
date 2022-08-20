@@ -58,14 +58,18 @@ export default class AnkiSynchronizer extends Plugin {
         this.addSettingTab(new AnkiSynchronizerSettingTab(this.app, this));
     }
 
-    async onunload() {
-        // Save data to local file
+    // Save data to local file
+    async save() {
         await this.saveData({
             version: version,
             settings: this.settings,
             noteState: Object.fromEntries(this.noteState),
             noteTypeState: Object.fromEntries(this.noteTypeState)
         });
+    }
+
+    async onunload() {
+        await this.save();
         console.log(locale.onUnload);
     }
 
@@ -94,6 +98,7 @@ export default class AnkiSynchronizer extends Plugin {
         console.log('Note type data retrieved from Anki:');
         console.log(state);
         await this.noteTypeState.change(state);
+        await this.save();
         new Notice(locale.importSuccessNotice);
     }
 
@@ -114,6 +119,7 @@ export default class AnkiSynchronizer extends Plugin {
             extra.set(note.nid, note);
         }
         await this.noteState.change(state, extra);
+        await this.save();
         new Notice(locale.synchronizeSuccessNotice);
     }
 
