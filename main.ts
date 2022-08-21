@@ -91,10 +91,10 @@ export default class AnkiSynchronizer extends Plugin {
     const noteTypesAndIds = await this.anki.noteTypesAndIds();
     const noteTypes = Object.keys(noteTypesAndIds);
     const noteTypeFields = await this.anki.multi<{ modelName: string }, string[]>('modelFieldNames', noteTypes.map(s => ({ modelName: s })));
-    const state = new Map<number, [NoteTypeDigest, undefined]>(noteTypes.map((name, index) => [noteTypesAndIds[name], [{
+    const state = new Map<number, NoteTypeDigest>(noteTypes.map((name, index) => [noteTypesAndIds[name], {
       name: name,
       fieldNames: noteTypeFields[index]
-    }, undefined]]));
+    }]));
     console.log('Note type data retrieved from Anki:');
     console.log(state);
     await this.noteTypeState.change(state);

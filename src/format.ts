@@ -18,9 +18,8 @@ export class Formatter {
   }
 
   markdown(markup: string) {
-    return markup.replace(/\[\[(\w+)\]\]/, (match, p) => {
-      const backlink = this.renderBacklink(p);
-      return `[${p}](${backlink})`
+    return markup.replace(/\[\[(.+)\]\]/, (match, p) => {
+      return this.renderBacklink(p);
     });
   }
 

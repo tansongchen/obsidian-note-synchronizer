@@ -14,19 +14,25 @@ abstract class State<K, V, I = undefined> extends Map<K, V> {
     this.anki = plugin.anki;
   }
 
-  async change(state: Map<K, [V, I]>) {
+  async change(state: Map<K, V | [V, I]>) {
     const _keys = [...this.keys()];
     const keys = [...state.keys()];
-    for (const [key, [value, info]] of state.entries()) {
-      await this.update(key, value, info);
-      this.set(key, value);
+    for (const [key, wrap] of state.entries()) {
+      if (Array.isArray(wrap)) {
+        const [value, info] = wrap;
+        await this.update(key, value, info);
+        this.set(key, value);
+      } else {
+        await this.update(key, wrap);
+        this.set(key, wrap);
+      }
     }
     for (const key of _keys.filter(x => !keys.includes(x))) {
       this.delete(key);
     }
   }
 
-  abstract update(key: K, value: V, extra: I): Promise<void>;
+  abstract update(key: K, value: V, info?: I): Promise<void>;
 }
 
 export type NoteTypeDigest = { name: string, fieldNames: string[] };
@@ -48,7 +54,7 @@ export class NoteTypeState extends State<number, NoteTypeDigest> {
     return super.delete(key);
   }
 
-  async update(key: number, value: NoteTypeDigest, info: undefined) {
+  async update(key: number, value: NoteTypeDigest) {
     if (this.has(key)) {
       this.delete(key);
     }
