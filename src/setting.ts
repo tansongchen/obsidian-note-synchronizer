@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import { locale } from 'src/lang';
+import locale from 'src/lang';
 import AnkiSynchronizer from "main";
 
 // Plugin Settings
@@ -20,11 +20,10 @@ export default class AnkiSynchronizerSettingTab extends PluginSettingTab {
   }
 
   display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    containerEl.createEl('h2', { text: locale.settingTabHeader });
+    this.containerEl.empty();
+    this.containerEl.createEl('h2', { text: locale.settingTabHeader });
 
-    new Setting(containerEl)
+    new Setting(this.containerEl)
       .setName(locale.settingRenderName)
       .setDesc(locale.settingRenderDescription)
       .addToggle(v => v

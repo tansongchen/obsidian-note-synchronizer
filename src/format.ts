@@ -1,19 +1,18 @@
-import AnkiSynchronizer from "main";
 import { Settings } from "./setting";
 import MarkdownIt from "markdown-it";
 
-export class Formatter {
-  settings: Settings;
-  mdit = new MarkdownIt();
-  vaultName: string;
+export default class Formatter {
+  private settings: Settings;
+  private mdit = new MarkdownIt();
+  private vaultName: string;
 
-  constructor(plugin: AnkiSynchronizer) {
-    this.vaultName = plugin.app.vault.getName();
-    this.settings = plugin.settings;
+  constructor(vaultName: string, settings: Settings) {
+    this.vaultName = vaultName;
+    this.settings = settings;
   }
 
   renderBacklink = (basename: string) => {
-    const url = "obsidian://open?vault=" + encodeURIComponent(this.vaultName) + String.raw`&file=` + encodeURIComponent(basename);
+    const url = `obsidian://open?vault=${encodeURIComponent(this.vaultName)}&file=${encodeURIComponent(basename)}`;
     return `[${basename}](${url})`
   }
 

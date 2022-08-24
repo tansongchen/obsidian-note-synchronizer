@@ -1,6 +1,6 @@
-import { assert } from "console";
-import { TFile, parseYaml, TAbstractFile, stringifyYaml } from "obsidian";
-import { NoteTypeDigest } from "./state";
+import { stringifyYaml, parseYaml } from "obsidian";
+import { NoteDigest, NoteTypeDigest } from "./state";
+import { MD5 } from 'object-hash';
 
 export interface FrontMatter {
   mid: number,
@@ -8,55 +8,36 @@ export interface FrontMatter {
   tags: string[]
 }
 
-export function getFrontMatterAndBody(raw: string): [object, string[]] {
-  const lines = raw.split('\n');
-  assert(lines.length >= 2 && lines[0].trim() == '---');
-  let index = 1;
-  while (lines[index].trim() !== '---') {
-    index += 1;
-    if (index == lines.length) {
-      throw new Error("Bad YAML");
-    }
-  }
-  const frontMatter = parseYaml(lines.slice(1, index).join('\n'));
-  const body = lines.slice(index + 1);
-  return [frontMatter, body]
-}
-
-export class Note {
-  file: TFile;
-  type: NoteTypeDigest;
-  mid: number;
+export default class Note {
   nid: number;
   tags: string[];
-  extras: object;
   fields: Record<string, string>;
+  private path: string;
+  typeName: string;
+  private mid: number;
+  private extras: object;
 
-  constructor(file: TFile, frontMatter: FrontMatter, body: string[], noteType: NoteTypeDigest) {
-    this.file = file;
-    const { mid, nid, tags, ...extras } = frontMatter;
-    this.type = noteType;
-    this.mid = mid;
-    this.nid = nid;
-    this.tags = tags;
-    this.extras = extras;
-    this.fields = this.parseFields(noteType.fieldNames, body);
+  static validateNote(path: string, content: string, noteTypes: Map<number, NoteTypeDigest>) {
+    const lines = content.split('\n');
+    if (lines.length < 6 || lines[0] !== '---') return;
+    const yamlEndIndex = lines.indexOf('---', 1);
+    if (yamlEndIndex === -1) return;
+    const maybeFrontMatter = parseYaml(lines.slice(1, yamlEndIndex).join('\n'));
+    const body = lines.slice(yamlEndIndex + 1);
+    if (!maybeFrontMatter.hasOwnProperty('mid') || !maybeFrontMatter.hasOwnProperty('nid') || !maybeFrontMatter.hasOwnProperty('tags')) return;
+    const frontMatter = maybeFrontMatter as FrontMatter;
+    const noteType = noteTypes.get(frontMatter.mid);
+    if (!noteType) return;
+    const fields = Note.parseFields(path, noteType.fieldNames, body);
+    // now it is a valid Note
+    return new Note(path, noteType.name, frontMatter, fields);
   }
 
-  dump() {
-    const frontMatter = stringifyYaml(Object.assign({
-      mid: this.mid,
-      nid: this.nid || 0,
-      tags: this.tags
-    }, this.extras));
-    const fieldNames = Object.keys(this.fields);
-    const frontMatterString = `---\n${frontMatter}---\n`;
-    return frontMatterString + this.fields[fieldNames[1]] + fieldNames.slice(2).map(s => `\n# ${s}\n${this.fields[s]}`).join('');
-  }
-
-  parseFields(fieldNames: string[], body: string[]) {
-    const fieldContents: string[] = [this.file.basename];
-    let buffer: Array<string> = [];
+  static parseFields(path: string, fieldNames: string[], body: string[]) {
+    const pathList = path.split('/');
+    const baseName = pathList[pathList.length - 1];
+    const fieldContents: string[] = [baseName.split('.').slice(0, -1).join('')];
+    let buffer: string[] = [];
     for (const line of body) {
       if (line.slice(0, 2) === '# ') {
         fieldContents.push(buffer.join('\n'));
@@ -71,7 +52,40 @@ export class Note {
     return fields;
   }
 
+  constructor(path: string, typeName: string, frontMatter: FrontMatter, fields: Record<string, string>) {
+    this.path = path;
+    const { mid, nid, tags, ...extras } = frontMatter;
+    this.typeName = typeName;
+    this.mid = mid;
+    this.nid = nid;
+    this.tags = tags;
+    this.extras = extras;
+    this.fields = fields;
+  }
+
+  digest(): NoteDigest {
+    return { deck: this.renderDeckName(), hash: MD5(this.fields), tags: this.tags }
+  }
+
+  title() {
+    return Object.values(this.fields)[0];
+  }
+
+  dump() {
+    const frontMatter = stringifyYaml(Object.assign({
+      mid: this.mid,
+      nid: this.nid,
+      tags: this.tags
+    }, this.extras)).trim().replace(/"/g, ``);
+    const fieldNames = Object.keys(this.fields);
+    const lines = [`---`, frontMatter, `---`, this.fields[fieldNames[1]]];
+    fieldNames.slice(2).map(s => {
+      lines.push(`# ${s}`, this.fields[s]);
+    });
+    return lines.join('\n');
+  }
+
   renderDeckName() {
-    return (this.file as TAbstractFile).path.split('/').slice(0, -1).join('::') || 'Obsidian';
+    return this.path.split('/').slice(0, -1).join('::') || 'Obsidian';
   }
 }

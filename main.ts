@@ -1,8 +1,7 @@
-import { normalizePath, Notice, Plugin, TFile } from 'obsidian';
-import { MD5 } from 'object-hash';
-import Anki from 'src/anki';
-import { Note, getFrontMatterAndBody, FrontMatter } from 'src/note';
-import { locale } from 'src/lang';
+import { normalizePath, Notice, Plugin, TAbstractFile } from 'obsidian';
+import Anki, { AnkiError } from 'src/anki';
+import Note from 'src/note';
+import locale from 'src/lang';
 import { NoteDigest, NoteState, NoteTypeDigest, NoteTypeState } from 'src/state';
 import AnkiSynchronizerSettingTab, { Settings, DEFAULT_SETTINGS } from 'src/setting';
 import { version } from './package.json';
@@ -89,8 +88,10 @@ export default class AnkiSynchronizer extends Plugin {
     if (!templatesPath) return;
     this.noteTypeState.setTemplatePath(templatesPath);
     const noteTypesAndIds = await this.anki.noteTypesAndIds();
+    if (noteTypesAndIds instanceof AnkiError || noteTypesAndIds instanceof Error) return;
     const noteTypes = Object.keys(noteTypesAndIds);
     const noteTypeFields = await this.anki.multi<{ modelName: string }, string[]>('modelFieldNames', noteTypes.map(s => ({ modelName: s })));
+    if (noteTypeFields instanceof AnkiError || noteTypeFields instanceof Error) return;
     const state = new Map<number, NoteTypeDigest>(noteTypes.map((name, index) => [noteTypesAndIds[name], {
       name: name,
       fieldNames: noteTypeFields[index]
@@ -109,32 +110,20 @@ export default class AnkiSynchronizer extends Plugin {
     const allFiles = this.app.vault.getMarkdownFiles();
     const state = new Map<number, [NoteDigest, Note]>();
     for (const file of allFiles) {
-      const note = await this.validateNote(file, templatesPath);
+      // ignore templates
+      if (file.path.startsWith(templatesPath)) continue;
+      // read and validate content
+      const content = await this.app.vault.read(file);
+      const note = Note.validateNote((file as TAbstractFile).path, content, this.noteTypeState);
       if (!note) continue;
       if (note.nid === 0) { // new file
         await this.noteState.handleAddNote(note);
+        this.app.vault.modify(file, note.dump());
       }
-      state.set(note.nid, [{ path: note.file.path, hash: MD5(note.fields), tags: note.tags }, note]);
+      state.set(note.nid, [note.digest(), note]);
     }
     await this.noteState.change(state);
     await this.save();
     new Notice(locale.synchronizeSuccessNotice);
-  }
-
-  async validateNote(file: TFile, templatesPath: string) {
-    // ignore templates
-    if (file.path.startsWith(templatesPath)) return;
-    // read and validate content
-    const content = await this.app.vault.read(file);
-    if (content.slice(0, 3) !== '---') return;
-    const [maybeFrontMatter, body] = getFrontMatterAndBody(content);
-    if (!maybeFrontMatter.hasOwnProperty('mid') || !maybeFrontMatter.hasOwnProperty('nid') || !maybeFrontMatter.hasOwnProperty('tags')) return;
-    // now it is a valid file
-    const frontMatter = maybeFrontMatter as FrontMatter;
-    const noteType = this.noteTypeState.get(frontMatter.mid);
-    if (noteType) {
-      return new Note(file, frontMatter, body, noteType);
-    }
-    new Notice("Cannot get note type information for note");
   }
 }

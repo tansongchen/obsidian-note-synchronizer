@@ -45,7 +45,7 @@ const zh_cn: Locale = {
   synchronizeStartNotice: '正在与 Anki 同步笔记……',
   synchronizeSuccessNotice: '已成功与 Anki 同步笔记！',
   synchronizeBadAnkiConnectNotice: 'Anki Connect 版本不匹配！',
-  synchronizeAnkiConnectUnavailableNotice: 'Anki 未打开或 Anki Connect 未完装！',
+  synchronizeAnkiConnectUnavailableNotice: 'Anki 未打开或 Anki Connect 未安装！',
   settingTabHeader: 'Anki 同步设置',
   settingRenderName: '渲染',
   settingRenderDescription: '是否在导入时将 Markdown 渲染为 HTML'
@@ -56,4 +56,6 @@ const locales: { [k: string]: Partial<Locale> } = {
   'zh-cn': zh_cn,
 }
 
-export const locale: Locale = Object.assign({}, en, locales[moment.locale()]);
+const locale: Locale = Object.assign({}, en, locales[moment.locale()]);
+
+export default locale;
