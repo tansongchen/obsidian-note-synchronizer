@@ -32,11 +32,11 @@ export default class AnkiSynchronizer extends Plugin {
         this.noteTypeState.set(parseInt(key), noteTypeState[key]);
       }
     }
-    await this.configureUI();
+    this.configureUI();
     console.log(locale.onLoad);
   }
 
-  async configureUI() {
+  configureUI() {
     // Add import note types command
     this.addCommand({
       id: 'import',
@@ -58,8 +58,8 @@ export default class AnkiSynchronizer extends Plugin {
   }
 
   // Save data to local file
-  async save() {
-    await this.saveData({
+  save() {
+    return this.saveData({
       version: version,
       settings: this.settings,
       noteState: Object.fromEntries(this.noteState),
@@ -73,39 +73,42 @@ export default class AnkiSynchronizer extends Plugin {
   }
 
   // Retrieve template information from Obsidian core plugin "Templates"
-  async getTemplatePath() {
+  getTemplatePath() {
     const templatesPlugin = (this.app as any).internalPlugins?.plugins['templates'];
     if (!templatesPlugin?.enabled) {
       new Notice(locale.templatesNotEnabledNotice);
-      return undefined;
+      throw new Error("Cannot get template path!");
     }
     return normalizePath(templatesPlugin.instance.options.folder);
   }
 
   async importNoteTypes() {
     new Notice(locale.importStartNotice);
-    const templatesPath = await this.getTemplatePath();
-    if (!templatesPath) return;
+    const templatesPath = this.getTemplatePath();
     this.noteTypeState.setTemplatePath(templatesPath);
     const noteTypesAndIds = await this.anki.noteTypesAndIds();
-    if (noteTypesAndIds instanceof AnkiError || noteTypesAndIds instanceof Error) return;
+    if (noteTypesAndIds instanceof AnkiError) {
+      new Notice(locale.importFaliureNotice);
+      return;
+    }
     const noteTypes = Object.keys(noteTypesAndIds);
     const noteTypeFields = await this.anki.multi<{ modelName: string }, string[]>('modelFieldNames', noteTypes.map(s => ({ modelName: s })));
-    if (noteTypeFields instanceof AnkiError || noteTypeFields instanceof Error) return;
+    if (noteTypeFields instanceof AnkiError) {
+      new Notice(locale.importFaliureNotice);
+      return;
+    }
     const state = new Map<number, NoteTypeDigest>(noteTypes.map((name, index) => [noteTypesAndIds[name], {
       name: name,
       fieldNames: noteTypeFields[index]
     }]));
-    console.log('Note type data retrieved from Anki:');
-    console.log(state);
+    console.log(`Retrieved note type data from Anki`, state);
     await this.noteTypeState.change(state);
     await this.save();
     new Notice(locale.importSuccessNotice);
   }
 
   async synchronize() {
-    const templatesPath = await this.getTemplatePath();
-    if (!templatesPath) return;
+    const templatesPath = this.getTemplatePath();
     new Notice(locale.synchronizeStartNotice);
     const allFiles = this.app.vault.getMarkdownFiles();
     const state = new Map<number, [NoteDigest, Note]>();
@@ -117,7 +120,12 @@ export default class AnkiSynchronizer extends Plugin {
       const note = Note.validateNote((file as TAbstractFile).path, content, this.noteTypeState);
       if (!note) continue;
       if (note.nid === 0) { // new file
-        await this.noteState.handleAddNote(note);
+        const nid = await this.noteState.handleAddNote(note);
+        if (nid === undefined) {
+          new Notice(locale.synchronizeAddNoteFaliureNotice(file.basename));
+          continue;
+        }
+        note.nid = nid;
         this.app.vault.modify(file, note.dump());
       }
       state.set(note.nid, [note.digest(), note]);

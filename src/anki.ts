@@ -13,13 +13,7 @@ interface Response<R = null> {
   result: R
 }
 
-export class AnkiError {
-  error: string
-
-  constructor(error: string) {
-    this.error = error
-  }
-}
+export class AnkiError extends Error {}
 
 export interface Note {
   deckName: string,
@@ -35,7 +29,7 @@ export interface Note {
 class Anki {
   private port = 8765;
 
-  async invoke<R = null, P = undefined>(action: string, params: P): Promise<R | Error | AnkiError> {
+  async invoke<R = null, P = undefined>(action: string, params: P): Promise<R | AnkiError> {
     type requestType = Request<P>;
     type responseType = Response<R>;
     const request = {
@@ -51,7 +45,7 @@ class Anki {
       return data.result;
     } catch (error) {
       new Notice(locale.synchronizeAnkiConnectUnavailableNotice);
-      return new Error("Bad Anki Connection");
+      throw error;
     }
   }
 

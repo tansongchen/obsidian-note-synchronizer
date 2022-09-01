@@ -1,8 +1,9 @@
 import AnkiSynchronizer from 'main';
 import { Notice, TFile } from 'obsidian';
 import Note, { FrontMatter } from 'src/note';
-import Anki, { AnkiError } from './anki';
+import Anki from './anki';
 import Formatter from './format';
+import locale from './lang';
 
 abstract class State<K, V, I = undefined> extends Map<K, V> {
   protected plugin: AnkiSynchronizer;
@@ -69,12 +70,10 @@ export class NoteTypeState extends State<number, NoteTypeDigest> {
     value.fieldNames.map(x => pseudoFields[x] = '\n\n');
     const templateNote = new Note(templatePath, value.name, pseudoFrontMatter, pseudoFields);
     const maybeTemplate = this.plugin.app.vault.getAbstractFileByPath(templatePath);
-    if (maybeTemplate === null) {
-      this.plugin.app.vault.create(templatePath, templateNote.dump())
-    } else if (maybeTemplate instanceof TFile) {
-      this.plugin.app.vault.modify(maybeTemplate as TFile, templateNote.dump());
+    if (maybeTemplate !== null) {
+      await this.plugin.app.vault.modify(maybeTemplate as TFile, templateNote.dump());
     } else {
-      new Notice("Bad template type");
+      await this.plugin.app.vault.create(templatePath, templateNote.dump());
     }
     console.log(`Created template ${templatePath}`);
   }
@@ -114,38 +113,44 @@ export class NoteState extends State<number, NoteDigest, Note> {
       return;
     }
     const { cards } = notesInfoResponse[0];
-    console.log(`Changing deck for ${note.title()}`);
-    console.log(cards, deck);
-    const changeDeckResponse = await this.anki.changeDeck(cards, deck);
-    if (changeDeckResponse instanceof AnkiError) {
-      console.log(changeDeckResponse, ', try creating');
-      await this.anki.createDeck(deck);
-      await this.anki.changeDeck(cards, deck);
-    } else if (changeDeckResponse instanceof Error) {
-      return;
+    console.log(`Changing deck for ${note.title()}`, deck);
+    let changeDeckResponse = await this.anki.changeDeck(cards, deck);
+    if (changeDeckResponse === null) return;
+
+    // if the supposed deck does not exist, create it
+    if (changeDeckResponse.message.contains('deck was not found')) {
+      console.log(changeDeckResponse.message, ', try creating');
+      const createDeckResponse = await this.anki.createDeck(deck);
+      if (createDeckResponse === null) {
+        changeDeckResponse = await this.anki.changeDeck(cards, deck);
+        if (changeDeckResponse === null) return;
+      }
     }
+    
+    new Notice(locale.synchronizeChangeDeckFaliureNotice(note.title()));
   }
 
   async updateFields(key: number, current: NoteDigest, value: NoteDigest, note: Note) {
     const fields = this.formatter.format(note.fields);
-    console.log(`Updating fields for ${note.title()}`)
-    console.log(note.nid, fields);
-    await this.anki.updateFields(note.nid, fields);
+    console.log(`Updating fields for ${note.title()}`, fields);
+    const updateFieldsResponse = await this.anki.updateFields(note.nid, fields);
+    if (updateFieldsResponse === null) return;
+    new Notice(locale.synchronizeUpdateFieldsFaliureNotice(note.title()));
   }
 
   async updateTags(key: number, current: NoteDigest, nextValue: NoteDigest, note: Note) {
     const tagsToAdd = note.tags.filter(x => !current.tags.contains(x));
     const tagsToRemove = current.tags.filter(x => !note.tags.contains(x));
+    let addTagsResponse = null, removeTagsResponse = null;
     if (tagsToAdd.length) {
-      console.log(`Adding tags for ${note.title()}`);
-      console.log(tagsToAdd);
-      await this.anki.addTagsToNotes([note.nid], tagsToAdd);
+      console.log(`Adding tags for ${note.title()}`, tagsToAdd);
+      addTagsResponse = await this.anki.addTagsToNotes([note.nid], tagsToAdd);
     }
     if (tagsToRemove.length) {
-      console.log(`Removing tags for ${note.title()}`);
-      console.log(tagsToRemove);
-      await this.anki.removeTagsFromNotes([note.nid], tagsToRemove);
+      console.log(`Removing tags for ${note.title()}`, tagsToRemove);
+      removeTagsResponse = await this.anki.removeTagsFromNotes([note.nid], tagsToRemove);
     }
+    if (addTagsResponse || removeTagsResponse) new Notice(locale.synchronizeUpdateTagsFaliureNotice(note.title()));
   }
 
   delete(key: number) {
@@ -160,20 +165,22 @@ export class NoteState extends State<number, NoteDigest, Note> {
       fields: this.formatter.format(note.fields),
       tags: note.tags
     };
-    console.log(`Adding note for ${note.title()}`);
-    console.log(ankiNote);
+    console.log(`Adding note for ${note.title()}`, ankiNote);
     let idOrError = await this.anki.addNote(ankiNote);
-    if (idOrError instanceof AnkiError) {
-      // if the supposed deck does not exist, create it
-      console.log(idOrError.error, ', try creating');
-      await this.anki.createDeck(ankiNote.deckName);
-      idOrError = await this.anki.addNote(ankiNote);
-      if (typeof idOrError !== 'number') {
-        return;
-      }
-    } else if (idOrError instanceof Error) {
-      return;
+    if (typeof idOrError === 'number') {
+      return idOrError;
     }
-    note.nid = idOrError;
+
+    // if the supposed deck does not exist, create it
+    if (idOrError.message.contains('deck was not found')) {
+      console.log(idOrError.message, ', try creating');
+      const nullOrError = await this.anki.createDeck(ankiNote.deckName);
+      if (nullOrError === null) {
+        idOrError = await this.anki.addNote(ankiNote);
+        if (typeof idOrError === 'number') {
+          return idOrError;
+        }
+      }
+    }
   }
 }

@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-anki-synchronizer",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"description": "This is a plugin for exporting Obsidian contents to Anki.",
 	"main": "main.js",
 	"scripts": {
