@@ -1,4 +1,4 @@
-import { stringifyYaml, parseYaml } from "obsidian";
+import { stringifyYaml, FrontMatterCache } from "obsidian";
 import { NoteDigest, NoteTypeDigest } from "./state";
 import { MD5 } from 'object-hash';
 
@@ -17,15 +17,12 @@ export default class Note {
   private mid: number;
   private extras: object;
 
-  static validateNote(path: string, content: string, noteTypes: Map<number, NoteTypeDigest>) {
+  static validateNote(path: string, frontmatter: FrontMatterCache, content: string, noteTypes: Map<number, NoteTypeDigest>) {
+    if (!frontmatter.hasOwnProperty('mid') || !frontmatter.hasOwnProperty('nid') || !frontmatter.hasOwnProperty('tags')) return;
+    const frontMatter = Object.assign({}, frontmatter, { position: undefined }) as FrontMatter;
     const lines = content.split('\n');
-    if (lines.length < 6 || lines[0] !== '---') return;
     const yamlEndIndex = lines.indexOf('---', 1);
-    if (yamlEndIndex === -1) return;
-    const maybeFrontMatter = parseYaml(lines.slice(1, yamlEndIndex).join('\n'));
     const body = lines.slice(yamlEndIndex + 1);
-    if (!maybeFrontMatter.hasOwnProperty('mid') || !maybeFrontMatter.hasOwnProperty('nid') || !maybeFrontMatter.hasOwnProperty('tags')) return;
-    const frontMatter = maybeFrontMatter as FrontMatter;
     const noteType = noteTypes.get(frontMatter.mid);
     if (!noteType) return;
     const fields = Note.parseFields(path, noteType.fieldNames, body);

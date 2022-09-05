@@ -1,19 +1,18 @@
 {
-	"name": "obsidian-anki-synchronizer",
-	"version": "0.0.6",
-	"description": "This is a plugin for exporting Obsidian contents to Anki.",
+	"name": "obsidian-note-synchronizer",
+	"version": "0.1.0",
+	"description": "This is a plugin for synchornizing Obsidian notes to other note-based softwares like Anki, following more strictly the principles of Zettelkasten and treating each Obsidian file as a note.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-        "test": "jest"
+		"test": "jest"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "MIT",
 	"dependencies": {
-		"axios": "^0.27.2",
 		"markdown-it": "^13.0.1",
 		"object-hash": "^3.0.0"
 	},

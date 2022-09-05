@@ -1,4 +1,4 @@
-import { normalizePath, Notice, Plugin, TAbstractFile } from 'obsidian';
+import { normalizePath, Notice, Plugin } from 'obsidian';
 import Anki, { AnkiError } from 'src/anki';
 import Note from 'src/note';
 import locale from 'src/lang';
@@ -88,13 +88,13 @@ export default class AnkiSynchronizer extends Plugin {
     this.noteTypeState.setTemplatePath(templatesPath);
     const noteTypesAndIds = await this.anki.noteTypesAndIds();
     if (noteTypesAndIds instanceof AnkiError) {
-      new Notice(locale.importFaliureNotice);
+      new Notice(locale.importFailureNotice);
       return;
     }
     const noteTypes = Object.keys(noteTypesAndIds);
     const noteTypeFields = await this.anki.multi<{ modelName: string }, string[]>('modelFieldNames', noteTypes.map(s => ({ modelName: s })));
     if (noteTypeFields instanceof AnkiError) {
-      new Notice(locale.importFaliureNotice);
+      new Notice(locale.importFailureNotice);
       return;
     }
     const state = new Map<number, NoteTypeDigest>(noteTypes.map((name, index) => [noteTypesAndIds[name], {
@@ -116,13 +116,15 @@ export default class AnkiSynchronizer extends Plugin {
       // ignore templates
       if (file.path.startsWith(templatesPath)) continue;
       // read and validate content
-      const content = await this.app.vault.read(file);
-      const note = Note.validateNote((file as TAbstractFile).path, content, this.noteTypeState);
+      const content = await this.app.vault.cachedRead(file);
+      const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+      if (!frontmatter) continue;
+      const note = Note.validateNote(file.path, frontmatter, content, this.noteTypeState);
       if (!note) continue;
       if (note.nid === 0) { // new file
         const nid = await this.noteState.handleAddNote(note);
         if (nid === undefined) {
-          new Notice(locale.synchronizeAddNoteFaliureNotice(file.basename));
+          new Notice(locale.synchronizeAddNoteFailureNotice(file.basename));
           continue;
         }
         note.nid = nid;

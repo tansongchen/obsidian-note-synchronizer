@@ -1,5 +1,4 @@
-import axios, { AxiosResponse } from "axios";
-import { Notice } from "obsidian";
+import { Notice, requestUrl } from "obsidian";
 import locale from "./lang";
 
 interface Request<P = undefined> {
@@ -32,13 +31,19 @@ class Anki {
   async invoke<R = null, P = undefined>(action: string, params: P): Promise<R | AnkiError> {
     type requestType = Request<P>;
     type responseType = Response<R>;
-    const request = {
+    const request: requestType = {
       action: action,
       version: 6,
       params: params
     };
     try {
-      const { data } = (await axios.post<responseType, AxiosResponse<responseType, requestType>, requestType>(`http://127.0.0.1:${this.port}`, request));
+      const { json } = await requestUrl({
+        url: `http://127.0.0.1:${this.port}`,
+        method: `POST`,
+        contentType: `application/json`,
+        body: JSON.stringify(request),
+      });
+      const data = json as responseType;
       if (data.error !== null) {
         return new AnkiError(data.error);
       }

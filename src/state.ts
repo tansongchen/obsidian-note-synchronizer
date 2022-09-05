@@ -127,7 +127,7 @@ export class NoteState extends State<number, NoteDigest, Note> {
       }
     }
     
-    new Notice(locale.synchronizeChangeDeckFaliureNotice(note.title()));
+    new Notice(locale.synchronizeChangeDeckFailureNotice(note.title()));
   }
 
   async updateFields(key: number, current: NoteDigest, value: NoteDigest, note: Note) {
@@ -135,7 +135,7 @@ export class NoteState extends State<number, NoteDigest, Note> {
     console.log(`Updating fields for ${note.title()}`, fields);
     const updateFieldsResponse = await this.anki.updateFields(note.nid, fields);
     if (updateFieldsResponse === null) return;
-    new Notice(locale.synchronizeUpdateFieldsFaliureNotice(note.title()));
+    new Notice(locale.synchronizeUpdateFieldsFailureNotice(note.title()));
   }
 
   async updateTags(key: number, current: NoteDigest, nextValue: NoteDigest, note: Note) {
@@ -150,7 +150,7 @@ export class NoteState extends State<number, NoteDigest, Note> {
       console.log(`Removing tags for ${note.title()}`, tagsToRemove);
       removeTagsResponse = await this.anki.removeTagsFromNotes([note.nid], tagsToRemove);
     }
-    if (addTagsResponse || removeTagsResponse) new Notice(locale.synchronizeUpdateTagsFaliureNotice(note.title()));
+    if (addTagsResponse || removeTagsResponse) new Notice(locale.synchronizeUpdateTagsFailureNotice(note.title()));
   }
 
   delete(key: number) {
