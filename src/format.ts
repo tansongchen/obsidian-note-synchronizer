@@ -1,9 +1,23 @@
 import { Settings } from "./setting";
 import MarkdownIt from "markdown-it";
+import hljs from "highlight.js";
 
 export default class Formatter {
   private settings: Settings;
-  private mdit = new MarkdownIt();
+  private mdit = new MarkdownIt({
+    html: true,
+    linkify: true,
+    highlight: function (str, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return hljs.highlight(str, { language: lang }).value;
+        } catch (__) {
+          return '';
+        }
+      }
+      return '';
+    }
+  });
   private vaultName: string;
 
   constructor(vaultName: string, settings: Settings) {
@@ -17,12 +31,19 @@ export default class Formatter {
   }
 
   markdown(markup: string) {
-    return markup.replace(/\[\[(.+)\]\]/, (match, p) => {
+    return markup.replace(/!?\[\[(.+?)\]\]/g, (match, p) => {
       return this.renderBacklink(p);
     });
   }
 
+  convertMathDelimiter(markdown: string) {
+    markdown = markdown.replace(/\$(.+?)\$/g, '\\\\($1\\\\)');
+    markdown = markdown.replace(/\$\$(.+?)\$\$/gs, '\\\\[$1\\\\]');
+    return markdown;
+  }
+
   html(markdown: string) {
+    markdown = this.convertMathDelimiter(markdown);
     return this.mdit.render(markdown);
   }
 

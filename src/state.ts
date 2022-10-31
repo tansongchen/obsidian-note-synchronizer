@@ -71,9 +71,9 @@ export class NoteTypeState extends State<number, NoteTypeDigest> {
     const templateNote = new Note(templatePath, value.name, pseudoFrontMatter, pseudoFields);
     const maybeTemplate = this.plugin.app.vault.getAbstractFileByPath(templatePath);
     if (maybeTemplate !== null) {
-      await this.plugin.app.vault.modify(maybeTemplate as TFile, templateNote.dump());
+      await this.plugin.app.vault.modify(maybeTemplate as TFile, this.plugin.noteManager.dump(templateNote));
     } else {
-      await this.plugin.app.vault.create(templatePath, templateNote.dump());
+      await this.plugin.app.vault.create(templatePath, this.plugin.noteManager.dump(templateNote));
     }
     console.log(`Created template ${templatePath}`);
   }

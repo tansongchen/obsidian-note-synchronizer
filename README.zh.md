@@ -13,11 +13,7 @@
 
 ## 安装
 
-本插件目前处于 Alpha 阶段，所以还没有在 Obsidian 插件市场发布。您需要手动安装此插件。
-
-在[发布页](https://github.com/tansongchen/obsidian-anki-synchronizer/releases)下载 `dist.zip` 文件，然后在您的知识库目录下面的 `.obsidian/plugins` 新建一个文件夹 `obsidian-anki-synchronizer`，然后把解压得到的三个文件放进去。重启 Obsidian。
-
-例如，我这里的目录是 `/Users/tansongchen/Library/Mobile Documents/iCloud~md~obsidian/Documents/卡片盒/.obsidian/plugins/obsidian-anki-synchronizer`。
+在 Obsidian 插件市场中搜索「Note Synchronizer」并根据提示安装即可。
 
 ## 配置
 

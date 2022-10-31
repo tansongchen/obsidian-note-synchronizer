@@ -15,11 +15,7 @@ The plugin works in two modes:
 
 ## Installation
 
-The plugin is currently in alpha stage and therefore not on the Obsidian marketplace. Therefore, manual installation is required.
-
-Download the file `dist.zip` from [release page](https://github.com/tansongchen/obsidian-anki-synchronizer/releases), create a new folder `obsidian-anki-synchronizer` under the `.obsidian/plugins` directory in your vault, and put the three files extracted into this folder. Reload obsidian.
-
-For example, the plugin path on my computer is `/Users/tansongchen/Library/Mobile Documents/iCloud~md~obsidian/Documents/卡片盒/.obsidian/plugins/obsidian-anki-synchronizer`.
+Install via the Obsidian community plugin marketplace by searching "Note Synchronizer".
 
 ## Setup
 

@@ -1,6 +1,6 @@
 import { normalizePath, Notice, Plugin } from 'obsidian';
 import Anki, { AnkiError } from 'src/anki';
-import Note from 'src/note';
+import Note, { NoteManager } from 'src/note';
 import locale from 'src/lang';
 import { NoteDigest, NoteState, NoteTypeDigest, NoteTypeState } from 'src/state';
 import AnkiSynchronizerSettingTab, { Settings, DEFAULT_SETTINGS } from 'src/setting';
@@ -16,6 +16,7 @@ interface Data {
 export default class AnkiSynchronizer extends Plugin {
   anki = new Anki();
   settings = DEFAULT_SETTINGS;
+  noteManager = new NoteManager(this.settings);
   noteState = new NoteState(this);
   noteTypeState = new NoteTypeState(this);
 
@@ -119,7 +120,7 @@ export default class AnkiSynchronizer extends Plugin {
       const content = await this.app.vault.cachedRead(file);
       const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
       if (!frontmatter) continue;
-      const note = Note.validateNote(file.path, frontmatter, content, this.noteTypeState);
+      const note = this.noteManager.validateNote(file.path, frontmatter, content, this.noteTypeState);
       if (!note) continue;
       if (note.nid === 0) { // new file
         const nid = await this.noteState.handleAddNote(note);
@@ -128,7 +129,7 @@ export default class AnkiSynchronizer extends Plugin {
           continue;
         }
         note.nid = nid;
-        this.app.vault.modify(file, note.dump());
+        this.app.vault.modify(file, this.noteManager.dump(note));
       }
       state.set(note.nid, [note.digest(), note]);
     }

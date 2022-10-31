@@ -1,6 +1,6 @@
 import Formatter from "../src/format";
 
-const markdownMode = new Formatter('卡片盒', { render: false });
+const markdownMode = new Formatter('卡片盒', { headingLevel: 1, render: false });
 
 test('Render back link', () => {
   expect(markdownMode.renderBacklink('笔记')).toBe(
@@ -19,5 +19,5 @@ test('e2e', () => {
   );
 })
 
-const htmlMode = new Formatter('卡片盒', { render: true });
+const htmlMode = new Formatter('卡片盒', { headingLevel: 1, render: true });
 

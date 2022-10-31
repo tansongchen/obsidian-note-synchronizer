@@ -1,7 +1,7 @@
 {
 	"id": "note-synchronizer",
 	"name": "Note Synchronizer",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"minAppVersion": "0.14.0",
 	"description": "This is a plugin for synchornizing Obsidian notes to other note-based softwares like Anki, following more strictly the principles of Zettelkasten and treating each Obsidian file as a note.",
 	"author": "Songchen Tan",
