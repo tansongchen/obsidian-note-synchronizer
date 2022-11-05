@@ -174,8 +174,8 @@ export class NoteState extends State<number, NoteDigest, Note> {
     // if the supposed deck does not exist, create it
     if (idOrError.message.contains('deck was not found')) {
       console.log(idOrError.message, ', try creating');
-      const nullOrError = await this.anki.createDeck(ankiNote.deckName);
-      if (nullOrError === null) {
+      const didOrError = await this.anki.createDeck(ankiNote.deckName);
+      if (typeof didOrError === 'number') {
         idOrError = await this.anki.addNote(ankiNote);
         if (typeof idOrError === 'number') {
           return idOrError;

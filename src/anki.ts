@@ -54,6 +54,17 @@ class Anki {
     }
   }
 
+  async multi<P, R>(actionName: string, actionList: P[]) {
+    return this.invoke<R[], { actions: Omit<Request<P>, 'version'>[] }>('multi', {
+      actions: actionList.map(params => ({
+        action: actionName,
+        params: params
+      }))
+    });
+  }
+
+  // read-only
+
   async version() {
     return this.invoke<number>('version', undefined);
   }
@@ -72,6 +83,14 @@ class Anki {
     })
   }
 
+  async notesInfo(noteIds: number[]) {
+    return this.invoke<{ cards: number[] }[], { notes: number[] }>('notesInfo', {
+      notes: noteIds
+    })
+  }
+
+  // write-only
+
   async addNote(note: Note) {
     return this.invoke<number, { note: Note }>('addNote', {
       note: note
@@ -80,7 +99,7 @@ class Anki {
 
   async updateFields(id: number, fields: Record<string, string>) {
     return this.invoke('updateNoteFields', {
-      'note': {
+      note: {
         id: id,
         fields: fields
       }
@@ -90,51 +109,36 @@ class Anki {
   async addTagsToNotes(noteIds: number[], tags: string[]) {
     const tagstring = tags.join(' ');
     return this.invoke('addTags', {
-      'notes': noteIds,
-      'tags': tagstring
+      notes: noteIds,
+      tags: tagstring
     })
   }
 
   async removeTagsFromNotes(noteIds: number[], tags: string[]) {
     const tagstring = tags.join(' ');
     return this.invoke('removeTags', {
-      'notes': noteIds,
-      'tags': tagstring
-    })
-  }
-
-  async changeDeck(cardIds: number[], deck: string) {
-    return this.invoke('changeDeck', {
-      'cards': cardIds,
-      'deck': deck
+      notes: noteIds,
+      tags: tagstring
     })
   }
 
   async deleteNotes(noteIds: number[]) {
     return this.invoke('deleteNotes', {
-      'notes': noteIds
-    })
-  }
-
-  async notesInfo(noteIds: number[]) {
-    return this.invoke<{ cards: number[] }[], { notes: number[] }>('notesInfo', {
       notes: noteIds
     })
   }
 
-  async createDeck(deckName: string) {
-    return this.invoke('createDeck', {
-      deck: deckName
+  async changeDeck(cardIds: number[], deck: string) {
+    return this.invoke('changeDeck', {
+      cards: cardIds,
+      deck: deck
     })
   }
 
-  async multi<P, R>(actionName: string, actionList: P[]) {
-    return this.invoke<R[], { actions: Omit<Request<P>, 'version'>[] }>('multi', {
-      actions: actionList.map(params => ({
-        action: actionName,
-        params: params
-      }))
-    });
+  async createDeck(deckName: string) {
+    return this.invoke<number, { deck: string }>('createDeck', {
+      deck: deckName
+    })
   }
 }
 

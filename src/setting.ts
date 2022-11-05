@@ -9,7 +9,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  render: false,
+  render: true,
   headingLevel: 1,
 }
 

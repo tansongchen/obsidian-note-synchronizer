@@ -23,7 +23,7 @@ export default class AnkiSynchronizer extends Plugin {
   async onload() {
     // Recover data from local file
     const data: (Data | null) = await this.loadData();
-    if (data?.version === version) {
+    if (data) {
       const { settings, noteState, noteTypeState } = data;
       Object.assign(this.settings, settings);
       for (const key in noteState) {
