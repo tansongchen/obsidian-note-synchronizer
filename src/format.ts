@@ -1,23 +1,13 @@
 import { Settings } from "./setting";
 import MarkdownIt from "markdown-it";
-import hljs from "highlight.js";
+import highlightjs from "markdown-it-highlightjs";
 
 export default class Formatter {
   private settings: Settings;
   private mdit = new MarkdownIt({
     html: true,
     linkify: true,
-    highlight: function (str, lang) {
-      if (lang && hljs.getLanguage(lang)) {
-        try {
-          return hljs.highlight(str, { language: lang }).value;
-        } catch (__) {
-          return '';
-        }
-      }
-      return '';
-    }
-  });
+  }).use(highlightjs);
   private vaultName: string;
 
   constructor(vaultName: string, settings: Settings) {
@@ -25,15 +15,28 @@ export default class Formatter {
     this.settings = settings;
   }
 
-  renderBacklink = (basename: string) => {
-    const url = `obsidian://open?vault=${encodeURIComponent(this.vaultName)}&file=${encodeURIComponent(basename)}`;
-    return `[${basename}](${url})`
+  convertWikilink(markup: string) {
+    return markup.replace(/!?\[\[(.+?)\]\]/g, (match, basename) => {
+      const url = `obsidian://open?vault=${encodeURIComponent(this.vaultName)}&file=${encodeURIComponent(basename)}`;
+      return `[${basename}](${url})`;
+    })
+  }
+
+  convertHighlightToCloze(markup: string) {
+    let index = 0;
+    while (markup.match(/==(.+?)==/) !== null) {
+      index += 1;
+      markup = markup.replace(/==(.+?)==/, (match, content) => {
+        return `{{c${index}::${content}}}`
+      });
+    }
+    return markup;
   }
 
   markdown(markup: string) {
-    return markup.replace(/!?\[\[(.+?)\]\]/g, (match, p) => {
-      return this.renderBacklink(p);
-    });
+    markup = this.convertWikilink(markup);
+    markup = this.convertHighlightToCloze(markup);
+    return markup;
   }
 
   convertMathDelimiter(markdown: string) {

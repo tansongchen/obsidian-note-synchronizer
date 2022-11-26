@@ -78,7 +78,11 @@ export default class AnkiSynchronizer extends Plugin {
     const templatesPlugin = (this.app as any).internalPlugins?.plugins['templates'];
     if (!templatesPlugin?.enabled) {
       new Notice(locale.templatesNotEnabledNotice);
-      throw new Error("Cannot get template path!");
+      throw new Error("Templates plugin is not enabled!");
+    }
+    if (templatesPlugin.instance.options.folder === undefined) {
+      new Notice(locale.templatesFolderUndefinedNotice);
+      throw new Error("Templates folder is undefined!");
     }
     return normalizePath(templatesPlugin.instance.options.folder);
   }
