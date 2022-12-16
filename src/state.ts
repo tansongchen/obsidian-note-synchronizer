@@ -95,8 +95,6 @@ export class NoteState extends State<number, NoteDigest, Note> {
     if (!current) return;
     if (current.deck !== value.deck) { // updating deck
       this.updateDeck(key, current, value, info);
-      // Obsidian url also need to be updated
-      this.updateFields(key, current, value, info);
     }
     if (current.hash !== value.hash) { // updating fields
       this.updateFields(key, current, value, info);
