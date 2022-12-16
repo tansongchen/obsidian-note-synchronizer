@@ -5,12 +5,16 @@ import AnkiSynchronizer from "main";
 // Plugin Settings
 export interface Settings {
   render: boolean;
+  linkify: boolean;
   headingLevel: number;
+  highlightAsCloze: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   render: true,
+  linkify: true,
   headingLevel: 1,
+  highlightAsCloze: false,
 }
 
 export default class AnkiSynchronizerSettingTab extends PluginSettingTab {
@@ -35,6 +39,26 @@ export default class AnkiSynchronizerSettingTab extends PluginSettingTab {
         })
       );
 
+    new Setting(this.containerEl)
+    .setName(locale.settingLinkifyName)
+    .setDesc(locale.settingLinkifyDescription)
+    .addToggle(v => v
+      .setValue(this.plugin.settings.linkify)
+      .onChange(async (value) => {
+        this.plugin.settings.linkify = value;
+      })
+    );
+
+    new Setting(this.containerEl)
+    .setName(locale.settingHighlightAsClozeName)
+    .setDesc(locale.settingHighlightAsClozeDescription)
+    .addToggle(v => v
+      .setValue(this.plugin.settings.highlightAsCloze)
+      .onChange(async (value) => {
+        this.plugin.settings.highlightAsCloze = value;
+      })
+    );
+    
     new Setting(this.containerEl)
       .setName(locale.settingHeadingLevelName)
       .setDesc(locale.settingHeadingLevelDescription)

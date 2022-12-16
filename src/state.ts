@@ -59,7 +59,6 @@ export class NoteTypeState extends State<number, NoteTypeDigest> {
     if (this.has(key)) {
       this.delete(key);
     }
-    const templatePath = `${this.templateFolderPath}/${value.name}.md`;
     const pseudoFrontMatter = {
       mid: key,
       nid: 0,
@@ -68,7 +67,8 @@ export class NoteTypeState extends State<number, NoteTypeDigest> {
     } as FrontMatter;
     const pseudoFields: Record<string, string> = {};
     value.fieldNames.map(x => pseudoFields[x] = '\n\n');
-    const templateNote = new Note(templatePath, value.name, pseudoFrontMatter, pseudoFields);
+    const templateNote = new Note(value.name, this.templateFolderPath!, value.name, pseudoFrontMatter, pseudoFields);
+    const templatePath = `${this.templateFolderPath}/${value.name}.md`;
     const maybeTemplate = this.plugin.app.vault.getAbstractFileByPath(templatePath);
     if (maybeTemplate !== null) {
       await this.plugin.app.vault.modify(maybeTemplate as TFile, this.plugin.noteManager.dump(templateNote));
@@ -131,7 +131,7 @@ export class NoteState extends State<number, NoteDigest, Note> {
   }
 
   async updateFields(key: number, current: NoteDigest, value: NoteDigest, note: Note) {
-    const fields = this.formatter.format(note.fields);
+    const fields = this.formatter.format(note);
     console.log(`Updating fields for ${note.title()}`, fields);
     const updateFieldsResponse = await this.anki.updateFields(note.nid, fields);
     if (updateFieldsResponse === null) return;
@@ -162,7 +162,7 @@ export class NoteState extends State<number, NoteDigest, Note> {
     const ankiNote = {
       deckName: note.renderDeckName(),
       modelName: note.typeName,
-      fields: this.formatter.format(note.fields),
+      fields: this.formatter.format(note),
       tags: note.tags
     };
     console.log(`Adding note for ${note.title()}`, ankiNote);
@@ -181,6 +181,8 @@ export class NoteState extends State<number, NoteDigest, Note> {
           return idOrError;
         }
       }
+    } else {
+      console.log(idOrError.message);
     }
   }
 }

@@ -1,6 +1,7 @@
 import { Settings } from "./setting";
 import MarkdownIt from "markdown-it";
 import highlightjs from "markdown-it-highlightjs";
+import Note from "./note";
 
 export default class Formatter {
   private settings: Settings;
@@ -35,7 +36,9 @@ export default class Formatter {
 
   markdown(markup: string) {
     markup = this.convertWikilink(markup);
-    markup = this.convertHighlightToCloze(markup);
+    if (this.settings.highlightAsCloze) {
+      markup = this.convertHighlightToCloze(markup);
+    }
     return markup;
   }
 
@@ -45,18 +48,20 @@ export default class Formatter {
     return markdown;
   }
 
-  html(markdown: string) {
+  html(markdown: string, index: number) {
     markdown = this.convertMathDelimiter(markdown);
-    return this.mdit.render(markdown);
+    return (index == 0) ? this.mdit.renderInline(markdown) : this.mdit.render(markdown);
   }
 
-  format(fields: Record<string, string>) {
+  format(note: Note) {
+    const fields = note.fields;
     const keys = Object.keys(fields);
     const result: Record<string, string> = {};
     keys.map((key, index) => {
-      const field = index ? fields[key] : `[[${fields[key]}]]`;
+      const linkify = (index == 0) && this.settings.linkify && !note.isCloze();
+      const field = linkify ? `[[${fields[key]}]]` : fields[key];
       const markdown = this.markdown(field);
-      result[key] = this.settings.render ? this.html(markdown) : markdown;
+      result[key] = this.settings.render ? this.html(markdown, index) : markdown;
     });
     return result;
   }

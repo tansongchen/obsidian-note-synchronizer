@@ -78,11 +78,11 @@ export default class AnkiSynchronizer extends Plugin {
     const templatesPlugin = (this.app as any).internalPlugins?.plugins['templates'];
     if (!templatesPlugin?.enabled) {
       new Notice(locale.templatesNotEnabledNotice);
-      throw new Error("Templates plugin is not enabled!");
+      return;
     }
     if (templatesPlugin.instance.options.folder === undefined) {
       new Notice(locale.templatesFolderUndefinedNotice);
-      throw new Error("Templates folder is undefined!");
+      return;
     }
     return normalizePath(templatesPlugin.instance.options.folder);
   }
@@ -90,6 +90,7 @@ export default class AnkiSynchronizer extends Plugin {
   async importNoteTypes() {
     new Notice(locale.importStartNotice);
     const templatesPath = this.getTemplatePath();
+    if (templatesPath === undefined) return;
     this.noteTypeState.setTemplatePath(templatesPath);
     const noteTypesAndIds = await this.anki.noteTypesAndIds();
     if (noteTypesAndIds instanceof AnkiError) {
@@ -114,6 +115,7 @@ export default class AnkiSynchronizer extends Plugin {
 
   async synchronize() {
     const templatesPath = this.getTemplatePath();
+    if (templatesPath === undefined) return;
     new Notice(locale.synchronizeStartNotice);
     const allFiles = this.app.vault.getMarkdownFiles();
     const state = new Map<number, [NoteDigest, Note]>();
@@ -124,7 +126,7 @@ export default class AnkiSynchronizer extends Plugin {
       const content = await this.app.vault.cachedRead(file);
       const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
       if (!frontmatter) continue;
-      const note = this.noteManager.validateNote(file.path, frontmatter, content, this.noteTypeState);
+      const note = this.noteManager.validateNote(file, frontmatter, content, this.noteTypeState);
       if (!note) continue;
       if (note.nid === 0) { // new file
         const nid = await this.noteState.handleAddNote(note);
