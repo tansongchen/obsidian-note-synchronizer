@@ -40,7 +40,7 @@ export default class Note {
   }
 
   renderDeckName() {
-    return this.folder.replace('/', '::') || 'Obsidian';
+    return this.folder.replace(/\//g, '::') || 'Obsidian';
   }
 
   isCloze() {
