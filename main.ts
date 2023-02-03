@@ -1,6 +1,7 @@
 import { normalizePath, Notice, Plugin } from 'obsidian';
 import Anki, { AnkiError } from 'src/anki';
 import Note, { NoteManager } from 'src/note';
+import { MediaManager } from 'src/media';
 import locale from 'src/lang';
 import { NoteDigest, NoteState, NoteTypeDigest, NoteTypeState } from 'src/state';
 import AnkiSynchronizerSettingTab, { Settings, DEFAULT_SETTINGS } from 'src/setting';
@@ -16,6 +17,7 @@ interface Data {
 export default class AnkiSynchronizer extends Plugin {
   anki = new Anki();
   settings = DEFAULT_SETTINGS;
+  mediaManager = new MediaManager();
   noteManager = new NoteManager(this.settings);
   noteState = new NoteState(this);
   noteTypeState = new NoteTypeState(this);
@@ -138,7 +140,21 @@ export default class AnkiSynchronizer extends Plugin {
       const content = await this.app.vault.cachedRead(file);
       const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
       if (!frontmatter) continue;
-      const note = this.noteManager.validateNote(file, frontmatter, content, this.noteTypeState);
+      const media = this.app.metadataCache.getFileCache(file)?.embeds;
+      if (media) {
+        for (const item of media) {
+          this.noteState.handleAddMedia(
+            this.mediaManager.parseMedia(item, this.app.vault, this.app.metadataCache)
+          );
+        }
+      }
+      const [note, mediaNameMap] = this.noteManager.validateNote(
+        file,
+        frontmatter,
+        content,
+        media,
+        this.noteTypeState
+      );
       if (!note) continue;
       if (note.nid === 0) {
         // new file
@@ -148,7 +164,7 @@ export default class AnkiSynchronizer extends Plugin {
           continue;
         }
         note.nid = nid;
-        this.app.vault.modify(file, this.noteManager.dump(note));
+        this.app.vault.modify(file, this.noteManager.dump(note, mediaNameMap));
       }
       state.set(note.nid, [note.digest(), note]);
     }

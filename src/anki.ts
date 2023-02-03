@@ -1,5 +1,6 @@
 import { Notice, requestUrl } from 'obsidian';
 import locale from './lang';
+import Media from './media';
 
 interface Request<P = undefined> {
   action: string;
@@ -90,6 +91,14 @@ class Anki {
   }
 
   // write-only
+
+  async addMedia(media: Media) {
+    return this.invoke('storeMediaFile', {
+      filename: media.filename,
+      path: media.path,
+      deleteExisting: media.deleteExisting
+    });
+  }
 
   async addNote(note: Note) {
     return this.invoke<number, { note: Note }>('addNote', {

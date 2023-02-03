@@ -1,6 +1,7 @@
 import AnkiSynchronizer from 'main';
 import { Notice, TFile } from 'obsidian';
 import Note, { FrontMatter } from 'src/note';
+import Media from './media';
 import Anki from './anki';
 import Formatter from './format';
 import locale from './lang';
@@ -198,5 +199,10 @@ export class NoteState extends State<number, NoteDigest, Note> {
     } else {
       console.log(idOrError.message);
     }
+  }
+
+  async handleAddMedia(media: Media) {
+    console.log(`Adding media ${media.filename}`, media);
+    await this.anki.addMedia(media);
   }
 }
