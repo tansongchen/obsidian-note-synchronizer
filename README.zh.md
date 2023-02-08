@@ -22,21 +22,19 @@
 ### 启用 Obsidian 核心插件「模板」
 
 本插件依赖于核心插件「模板」来确定应该将 Anki 笔记模板生成到哪个文件夹中。您需要在 Obsidian 设置页面的「核心插件」选项中启用「模板」。
+
 ### 安装并配置 Anki Connect
 
 像其他 Anki 插件一样安装 [Anki Connect](https://ankiweb.net/shared/info/2055492159)。安装完成后，在「工具 - 插件 - Anki Connect - 配置」中粘贴以下文本：
 
 ```json
 {
-    "apiKey": null,
-    "apiLogPath": null,
-    "webBindAddress": "127.0.0.1",
-    "webBindPort": 8765,
-    "webCorsOrigin": "http://localhost",
-    "webCorsOriginList": [
-        "http://localhost",
-        "app://obsidian.md"
-    ]
+  "apiKey": null,
+  "apiLogPath": null,
+  "webBindAddress": "127.0.0.1",
+  "webBindPort": 8765,
+  "webCorsOrigin": "http://localhost",
+  "webCorsOriginList": ["http://localhost", "app://obsidian.md"]
 }
 ```
 
@@ -67,19 +65,11 @@ tags: []
 date: {{date}} {{time}}
 ---
 
-
-
 # 实例
-
-
 
 # 类比、比较与对比
 
-
-
 # 备注
-
-
 ```
 
 ### 编辑笔记
@@ -105,8 +95,6 @@ date: 2023-01-14 09:15
 这是==需要记忆==的内容。
 
 # 背面额外
-
-
 ```
 
 会被制作为第一字段为「这是{{c1::需要记忆}}的内容。」、第二字段为空的 Anki 填空题笔记。

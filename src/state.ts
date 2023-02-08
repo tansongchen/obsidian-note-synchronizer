@@ -36,12 +36,14 @@ abstract class State<K, V, I = undefined> extends Map<K, V> {
   abstract update(key: K, value: V, info?: I): Promise<void>;
 }
 
-export type NoteTypeDigest = { name: string, fieldNames: string[] };
+export type NoteTypeDigest = { name: string; fieldNames: string[] };
 
 export class NoteTypeState extends State<number, NoteTypeDigest> {
   private templateFolderPath: string | undefined = undefined;
 
-  setTemplatePath(templateFolderPath: string) { this.templateFolderPath = templateFolderPath; }
+  setTemplatePath(templateFolderPath: string) {
+    this.templateFolderPath = templateFolderPath;
+  }
 
   delete(key: number) {
     const noteTypeDigest = this.get(key);
@@ -63,15 +65,24 @@ export class NoteTypeState extends State<number, NoteTypeDigest> {
       mid: key,
       nid: 0,
       tags: [],
-      date: "{{date}} {{time}}"
+      date: '{{date}} {{time}}'
     } as FrontMatter;
     const pseudoFields: Record<string, string> = {};
-    value.fieldNames.map(x => pseudoFields[x] = '\n\n');
-    const templateNote = new Note(value.name, this.templateFolderPath!, value.name, pseudoFrontMatter, pseudoFields);
+    value.fieldNames.map(x => (pseudoFields[x] = '\n\n'));
+    const templateNote = new Note(
+      value.name,
+      this.templateFolderPath!,
+      value.name,
+      pseudoFrontMatter,
+      pseudoFields
+    );
     const templatePath = `${this.templateFolderPath}/${value.name}.md`;
     const maybeTemplate = this.plugin.app.vault.getAbstractFileByPath(templatePath);
     if (maybeTemplate !== null) {
-      await this.plugin.app.vault.modify(maybeTemplate as TFile, this.plugin.noteManager.dump(templateNote));
+      await this.plugin.app.vault.modify(
+        maybeTemplate as TFile,
+        this.plugin.noteManager.dump(templateNote)
+      );
     } else {
       await this.plugin.app.vault.create(templatePath, this.plugin.noteManager.dump(templateNote));
     }
@@ -79,7 +90,7 @@ export class NoteTypeState extends State<number, NoteTypeDigest> {
   }
 }
 
-export type NoteDigest = { deck: string, hash: string, tags: string[] };
+export type NoteDigest = { deck: string; hash: string; tags: string[] };
 
 export class NoteState extends State<number, NoteDigest, Note> {
   private formatter: Formatter;
@@ -93,13 +104,16 @@ export class NoteState extends State<number, NoteDigest, Note> {
   async update(key: number, value: NoteDigest, info: Note) {
     const current = this.get(key);
     if (!current) return;
-    if (current.deck !== value.deck) { // updating deck
+    if (current.deck !== value.deck) {
+      // updating deck
       this.updateDeck(key, current, value, info);
     }
-    if (current.hash !== value.hash) { // updating fields
+    if (current.hash !== value.hash) {
+      // updating fields
       this.updateFields(key, current, value, info);
     }
-    if (current.tags !== value.tags) { // updating tags
+    if (current.tags !== value.tags) {
+      // updating tags
       this.updateTags(key, current, value, info);
     }
   }
@@ -124,7 +138,7 @@ export class NoteState extends State<number, NoteDigest, Note> {
         if (changeDeckResponse === null) return;
       }
     }
-    
+
     new Notice(locale.synchronizeChangeDeckFailureNotice(note.title()));
   }
 
@@ -139,7 +153,8 @@ export class NoteState extends State<number, NoteDigest, Note> {
   async updateTags(key: number, current: NoteDigest, nextValue: NoteDigest, note: Note) {
     const tagsToAdd = note.tags.filter(x => !current.tags.contains(x));
     const tagsToRemove = current.tags.filter(x => !note.tags.contains(x));
-    let addTagsResponse = null, removeTagsResponse = null;
+    let addTagsResponse = null,
+      removeTagsResponse = null;
     if (tagsToAdd.length) {
       console.log(`Adding tags for ${note.title()}`, tagsToAdd);
       addTagsResponse = await this.anki.addTagsToNotes([note.nid], tagsToAdd);
@@ -148,7 +163,8 @@ export class NoteState extends State<number, NoteDigest, Note> {
       console.log(`Removing tags for ${note.title()}`, tagsToRemove);
       removeTagsResponse = await this.anki.removeTagsFromNotes([note.nid], tagsToRemove);
     }
-    if (addTagsResponse || removeTagsResponse) new Notice(locale.synchronizeUpdateTagsFailureNotice(note.title()));
+    if (addTagsResponse || removeTagsResponse)
+      new Notice(locale.synchronizeUpdateTagsFailureNotice(note.title()));
   }
 
   delete(key: number) {

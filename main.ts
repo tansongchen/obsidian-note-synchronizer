@@ -7,10 +7,10 @@ import AnkiSynchronizerSettingTab, { Settings, DEFAULT_SETTINGS } from 'src/sett
 import { version } from './package.json';
 
 interface Data {
-  version: string,
-  settings: Settings,
-  noteState: Record<string, NoteDigest>,
-  noteTypeState: Record<string, NoteTypeDigest>
+  version: string;
+  settings: Settings;
+  noteState: Record<string, NoteDigest>;
+  noteTypeState: Record<string, NoteTypeDigest>;
 }
 
 export default class AnkiSynchronizer extends Plugin {
@@ -22,7 +22,7 @@ export default class AnkiSynchronizer extends Plugin {
 
   async onload() {
     // Recover data from local file
-    const data: (Data | null) = await this.loadData();
+    const data: Data | null = await this.loadData();
     if (data) {
       const { settings, noteState, noteTypeState } = data;
       Object.assign(this.settings, settings);
@@ -44,7 +44,7 @@ export default class AnkiSynchronizer extends Plugin {
       name: locale.importCommandName,
       callback: async () => await this.importNoteTypes()
     });
-    this.addRibbonIcon("enter", locale.importCommandName, async () => await this.importNoteTypes());
+    this.addRibbonIcon('enter', locale.importCommandName, async () => await this.importNoteTypes());
 
     // Add synchronize command
     this.addCommand({
@@ -52,7 +52,11 @@ export default class AnkiSynchronizer extends Plugin {
       name: locale.synchronizeCommandName,
       callback: async () => await this.synchronize()
     });
-    this.addRibbonIcon("sheets-in-box", locale.synchronizeCommandName, async () => await this.synchronize());
+    this.addRibbonIcon(
+      'sheets-in-box',
+      locale.synchronizeCommandName,
+      async () => await this.synchronize()
+    );
 
     // Add a setting tab to configure settings
     this.addSettingTab(new AnkiSynchronizerSettingTab(this.app, this));
@@ -98,15 +102,23 @@ export default class AnkiSynchronizer extends Plugin {
       return;
     }
     const noteTypes = Object.keys(noteTypesAndIds);
-    const noteTypeFields = await this.anki.multi<{ modelName: string }, string[]>('modelFieldNames', noteTypes.map(s => ({ modelName: s })));
+    const noteTypeFields = await this.anki.multi<{ modelName: string }, string[]>(
+      'modelFieldNames',
+      noteTypes.map(s => ({ modelName: s }))
+    );
     if (noteTypeFields instanceof AnkiError) {
       new Notice(locale.importFailureNotice);
       return;
     }
-    const state = new Map<number, NoteTypeDigest>(noteTypes.map((name, index) => [noteTypesAndIds[name], {
-      name: name,
-      fieldNames: noteTypeFields[index]
-    }]));
+    const state = new Map<number, NoteTypeDigest>(
+      noteTypes.map((name, index) => [
+        noteTypesAndIds[name],
+        {
+          name: name,
+          fieldNames: noteTypeFields[index]
+        }
+      ])
+    );
     console.log(`Retrieved note type data from Anki`, state);
     await this.noteTypeState.change(state);
     await this.save();
@@ -128,7 +140,8 @@ export default class AnkiSynchronizer extends Plugin {
       if (!frontmatter) continue;
       const note = this.noteManager.validateNote(file, frontmatter, content, this.noteTypeState);
       if (!note) continue;
-      if (note.nid === 0) { // new file
+      if (note.nid === 0) {
+        // new file
         const nid = await this.noteState.handleAddNote(note);
         if (nid === undefined) {
           new Notice(locale.synchronizeAddNoteFailureNotice(file.basename));

@@ -1,32 +1,32 @@
-import { moment } from "obsidian";
+import { moment } from 'obsidian';
 
 interface Locale {
-  onLoad: string,
-  onUnload: string,
-  synchronizeCommandName: string,
-  templatesNotEnabledNotice: string,
-  templatesFolderUndefinedNotice: string,
-  importCommandName: string,
-  importStartNotice: string,
-  importSuccessNotice: string,
-  importFailureNotice: string,
-  synchronizeStartNotice: string,
-  synchronizeSuccessNotice: string,
-  synchronizeBadAnkiConnectNotice: string,
-  synchronizeAnkiConnectUnavailableNotice: string,
-  synchronizeAddNoteFailureNotice: (title: string) => string,
-  synchronizeChangeDeckFailureNotice: (title: string) => string,
-  synchronizeUpdateFieldsFailureNotice: (title: string) => string,
-  synchronizeUpdateTagsFailureNotice: (title: string) => string,
-  settingTabHeader: string,
-  settingRenderName: string,
-  settingRenderDescription: string,
-  settingLinkifyName: string,
-  settingLinkifyDescription: string,
-  settingHighlightAsClozeName: string,
-  settingHighlightAsClozeDescription: string,
-  settingHeadingLevelName: string,
-  settingHeadingLevelDescription: string,
+  onLoad: string;
+  onUnload: string;
+  synchronizeCommandName: string;
+  templatesNotEnabledNotice: string;
+  templatesFolderUndefinedNotice: string;
+  importCommandName: string;
+  importStartNotice: string;
+  importSuccessNotice: string;
+  importFailureNotice: string;
+  synchronizeStartNotice: string;
+  synchronizeSuccessNotice: string;
+  synchronizeBadAnkiConnectNotice: string;
+  synchronizeAnkiConnectUnavailableNotice: string;
+  synchronizeAddNoteFailureNotice: (title: string) => string;
+  synchronizeChangeDeckFailureNotice: (title: string) => string;
+  synchronizeUpdateFieldsFailureNotice: (title: string) => string;
+  synchronizeUpdateTagsFailureNotice: (title: string) => string;
+  settingTabHeader: string;
+  settingRenderName: string;
+  settingRenderDescription: string;
+  settingLinkifyName: string;
+  settingLinkifyDescription: string;
+  settingHighlightAsClozeName: string;
+  settingHighlightAsClozeDescription: string;
+  settingHeadingLevelName: string;
+  settingHeadingLevelDescription: string;
 }
 
 const en: Locale = {
@@ -55,8 +55,9 @@ const en: Locale = {
   settingHighlightAsClozeName: 'Highlight as Cloze',
   settingHighlightAsClozeDescription: 'Enable using Obsidian highlights (==...==) for Anki clozes',
   settingHeadingLevelName: 'Field name heading level',
-  settingHeadingLevelDescription: 'Which level (h1, h2, h3, ...) to use for field names when generating the note template',
-}
+  settingHeadingLevelDescription:
+    'Which level (h1, h2, h3, ...) to use for field names when generating the note template'
+};
 
 const zh_cn: Locale = {
   onLoad: '笔记同步插件已成功启用！',
@@ -84,13 +85,14 @@ const zh_cn: Locale = {
   settingHighlightAsClozeName: '将高亮用作 Anki 填空题',
   settingHighlightAsClozeDescription: '启用将 Obsidian 高亮的文本转换为 Anki 填空',
   settingHeadingLevelName: '字段名称标题层级',
-  settingHeadingLevelDescription: '从 Anki 笔记类型生成模板时，将 Anki 的字段名称表示为几级标题（一级、二级、三级等）',
-}
+  settingHeadingLevelDescription:
+    '从 Anki 笔记类型生成模板时，将 Anki 的字段名称表示为几级标题（一级、二级、三级等）'
+};
 
 const locales: { [k: string]: Partial<Locale> } = {
   en,
-  'zh-cn': zh_cn,
-}
+  'zh-cn': zh_cn
+};
 
 const locale: Locale = Object.assign({}, en, locales[moment.locale()]);
 

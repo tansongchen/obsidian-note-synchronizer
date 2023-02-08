@@ -1,28 +1,28 @@
-import { Notice, requestUrl } from "obsidian";
-import locale from "./lang";
+import { Notice, requestUrl } from 'obsidian';
+import locale from './lang';
 
 interface Request<P = undefined> {
-  action: string,
-  version: number,
-  params: P
+  action: string;
+  version: number;
+  params: P;
 }
 
 interface Response<R = null> {
-  error: string | null,
-  result: R
+  error: string | null;
+  result: R;
 }
 
 export class AnkiError extends Error {}
 
 export interface Note {
-  deckName: string,
-  modelName: string,
-  fields: Record<string, string>,
+  deckName: string;
+  modelName: string;
+  fields: Record<string, string>;
   options?: {
-    allowDuplicate: boolean,
-    duplicateScope: string
-  }
-  tags: Array<string>,
+    allowDuplicate: boolean;
+    duplicateScope: string;
+  };
+  tags: Array<string>;
 }
 
 class Anki {
@@ -41,7 +41,7 @@ class Anki {
         url: `http://127.0.0.1:${this.port}`,
         method: `POST`,
         contentType: `application/json`,
-        body: JSON.stringify(request),
+        body: JSON.stringify(request)
       });
       const data = json as responseType;
       if (data.error !== null) {
@@ -80,13 +80,13 @@ class Anki {
   async fields(noteType: string) {
     return this.invoke<string[], { modelName: string }>('modelFieldNames', {
       modelName: noteType
-    })
+    });
   }
 
   async notesInfo(noteIds: number[]) {
     return this.invoke<{ cards: number[] }[], { notes: number[] }>('notesInfo', {
       notes: noteIds
-    })
+    });
   }
 
   // write-only
@@ -111,7 +111,7 @@ class Anki {
     return this.invoke('addTags', {
       notes: noteIds,
       tags: tagstring
-    })
+    });
   }
 
   async removeTagsFromNotes(noteIds: number[], tags: string[]) {
@@ -119,26 +119,26 @@ class Anki {
     return this.invoke('removeTags', {
       notes: noteIds,
       tags: tagstring
-    })
+    });
   }
 
   async deleteNotes(noteIds: number[]) {
     return this.invoke('deleteNotes', {
       notes: noteIds
-    })
+    });
   }
 
   async changeDeck(cardIds: number[], deck: string) {
     return this.invoke('changeDeck', {
       cards: cardIds,
       deck: deck
-    })
+    });
   }
 
   async createDeck(deckName: string) {
     return this.invoke<number, { deck: string }>('createDeck', {
       deck: deckName
-    })
+    });
   }
 }
 

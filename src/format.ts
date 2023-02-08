@@ -1,13 +1,13 @@
-import { Settings } from "./setting";
-import MarkdownIt from "markdown-it";
-import highlightjs from "markdown-it-highlightjs";
-import Note from "./note";
+import { Settings } from './setting';
+import MarkdownIt from 'markdown-it';
+import highlightjs from 'markdown-it-highlightjs';
+import Note from './note';
 
 export default class Formatter {
   private settings: Settings;
   private mdit = new MarkdownIt({
     html: true,
-    linkify: true,
+    linkify: true
   }).use(highlightjs);
   private vaultName: string;
 
@@ -18,9 +18,11 @@ export default class Formatter {
 
   convertWikilink(markup: string) {
     return markup.replace(/!?\[\[(.+?)\]\]/g, (match, basename) => {
-      const url = `obsidian://open?vault=${encodeURIComponent(this.vaultName)}&file=${encodeURIComponent(basename)}`;
+      const url = `obsidian://open?vault=${encodeURIComponent(
+        this.vaultName
+      )}&file=${encodeURIComponent(basename)}`;
       return `[${basename}](${url})`;
-    })
+    });
   }
 
   convertHighlightToCloze(markup: string) {
@@ -28,7 +30,7 @@ export default class Formatter {
     while (markup.match(/==(.+?)==/) !== null) {
       index += 1;
       markup = markup.replace(/==(.+?)==/, (match, content) => {
-        return `{{c${index}::${content}}}`
+        return `{{c${index}::${content}}}`;
       });
     }
     return markup;
@@ -50,7 +52,7 @@ export default class Formatter {
 
   html(markdown: string, index: number) {
     markdown = this.convertMathDelimiter(markdown);
-    return (index == 0) ? this.mdit.renderInline(markdown) : this.mdit.render(markdown);
+    return index == 0 ? this.mdit.renderInline(markdown) : this.mdit.render(markdown);
   }
 
   format(note: Note) {
@@ -58,7 +60,7 @@ export default class Formatter {
     const keys = Object.keys(fields);
     const result: Record<string, string> = {};
     keys.map((key, index) => {
-      const linkify = (index == 0) && this.settings.linkify && !note.isCloze();
+      const linkify = index == 0 && this.settings.linkify && !note.isCloze();
       const field = linkify ? `[[${fields[key]}]]` : fields[key];
       const markdown = this.markdown(field);
       result[key] = this.settings.render ? this.html(markdown, index) : markdown;

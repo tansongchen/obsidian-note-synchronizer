@@ -31,15 +31,12 @@ Install [Anki Connect](https://ankiweb.net/shared/info/2055492159) in the same w
 
 ```json
 {
-    "apiKey": null,
-    "apiLogPath": null,
-    "webBindAddress": "127.0.0.1",
-    "webBindPort": 8765,
-    "webCorsOrigin": "http://localhost",
-    "webCorsOriginList": [
-        "http://localhost",
-        "app://obsidian.md"
-    ]
+  "apiKey": null,
+  "apiLogPath": null,
+  "webBindAddress": "127.0.0.1",
+  "webBindPort": 8765,
+  "webCorsOrigin": "http://localhost",
+  "webCorsOriginList": ["http://localhost", "app://obsidian.md"]
 }
 ```
 
@@ -60,7 +57,7 @@ tags: []
 date: {{date}} {{time}}
 ```
 
-Where `mid` is a number representing the note type ID in Anki. If this note type happen to have 3 or more fields, the third field and all other fields after that will appear as `h1` title in the markdown file. 
+Where `mid` is a number representing the note type ID in Anki. If this note type happen to have 3 or more fields, the third field and all other fields after that will appear as `h1` title in the markdown file.
 
 ### Edit Notes
 

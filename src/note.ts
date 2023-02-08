@@ -1,12 +1,12 @@
-import { stringifyYaml, FrontMatterCache, TFile } from "obsidian";
-import { NoteDigest, NoteTypeDigest } from "./state";
+import { stringifyYaml, FrontMatterCache, TFile } from 'obsidian';
+import { NoteDigest, NoteTypeDigest } from './state';
 import { MD5 } from 'object-hash';
-import { Settings } from "./setting";
+import { Settings } from './setting';
 
 export interface FrontMatter {
-  mid: number,
-  nid: number,
-  tags: string[]
+  mid: number;
+  nid: number;
+  tags: string[];
 }
 
 export default class Note {
@@ -19,7 +19,13 @@ export default class Note {
   typeName: string;
   extras: object;
 
-  constructor(basename: string, folder: string, typeName: string, frontMatter: FrontMatter, fields: Record<string, string>) {
+  constructor(
+    basename: string,
+    folder: string,
+    typeName: string,
+    frontMatter: FrontMatter,
+    fields: Record<string, string>
+  ) {
     this.basename = basename;
     this.folder = folder;
     const { mid, nid, tags, ...extras } = frontMatter;
@@ -32,7 +38,11 @@ export default class Note {
   }
 
   digest(): NoteDigest {
-    return { deck: this.renderDeckName(), hash: MD5(this.fields), tags: this.tags }
+    return {
+      deck: this.renderDeckName(),
+      hash: MD5(this.fields),
+      tags: this.tags
+    };
   }
 
   title() {
@@ -55,9 +65,21 @@ export class NoteManager {
     this.settings = settings;
   }
 
-  validateNote(file: TFile, frontmatter: FrontMatterCache, content: string, noteTypes: Map<number, NoteTypeDigest>) {
-    if (!frontmatter.hasOwnProperty('mid') || !frontmatter.hasOwnProperty('nid') || !frontmatter.hasOwnProperty('tags')) return;
-    const frontMatter = Object.assign({}, frontmatter, { position: undefined }) as FrontMatter;
+  validateNote(
+    file: TFile,
+    frontmatter: FrontMatterCache,
+    content: string,
+    noteTypes: Map<number, NoteTypeDigest>
+  ) {
+    if (
+      !frontmatter.hasOwnProperty('mid') ||
+      !frontmatter.hasOwnProperty('nid') ||
+      !frontmatter.hasOwnProperty('tags')
+    )
+      return;
+    const frontMatter = Object.assign({}, frontmatter, {
+      position: undefined
+    }) as FrontMatter;
     const lines = content.split('\n');
     const yamlEndIndex = lines.indexOf('---', 1);
     const body = lines.slice(yamlEndIndex + 1);
@@ -78,26 +100,33 @@ export class NoteManager {
     const fieldContents: string[] = isCloze ? [] : [title];
     let buffer: string[] = [];
     for (const line of body) {
-      if (line.slice(0, headingLevel + 1) === ('#'.repeat(headingLevel) + ' ')) {
+      if (line.slice(0, headingLevel + 1) === '#'.repeat(headingLevel) + ' ') {
         fieldContents.push(buffer.join('\n'));
         buffer = [];
       } else {
-        buffer.push(line)
+        buffer.push(line);
       }
     }
     fieldContents.push(buffer.join('\n'));
     if (fieldNames.length !== fieldContents.length) return;
     const fields: Record<string, string> = {};
-    fieldNames.map((v, i) => fields[v] = fieldContents[i]);
+    fieldNames.map((v, i) => (fields[v] = fieldContents[i]));
     return fields;
   }
 
   dump(note: Note) {
-    const frontMatter = stringifyYaml(Object.assign({
-      mid: note.mid,
-      nid: note.nid,
-      tags: note.tags
-    }, note.extras)).trim().replace(/"/g, ``);
+    const frontMatter = stringifyYaml(
+      Object.assign(
+        {
+          mid: note.mid,
+          nid: note.nid,
+          tags: note.tags
+        },
+        note.extras
+      )
+    )
+      .trim()
+      .replace(/"/g, ``);
     const fieldNames = Object.keys(note.fields);
     const lines = [`---`, frontMatter, `---`];
     if (note.isCloze()) {
