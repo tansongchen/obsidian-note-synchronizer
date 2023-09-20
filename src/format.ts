@@ -17,11 +17,18 @@ export default class Formatter {
   }
 
   convertWikilink(markup: string) {
-    return markup.replace(/!?\[\[(.+?)\]\]/g, (match, basename) => {
+    return markup.replace(/!?\[\[(.+?)\]\]/g, (_, basename) => {
+      let title = basename;
+      if (basename.includes('|')) {
+        const split = basename.split('|');
+        basename = split[0];
+        title = split[1];
+      }
       const url = `obsidian://open?vault=${encodeURIComponent(
         this.vaultName
       )}&file=${encodeURIComponent(basename)}`;
-      return `[${basename}](${url})`;
+      // wikilinks if there is a [[page|title]] report only the title
+      return `[${title}](${url})`;
     });
   }
 
@@ -29,7 +36,7 @@ export default class Formatter {
     let index = 0;
     while (markup.match(/==(.+?)==/) !== null) {
       index += 1;
-      markup = markup.replace(/==(.+?)==/, (match, content) => {
+      markup = markup.replace(/==(.+?)==/, (_, content) => {
         return `{{c${index}::${content}}}`;
       });
     }
@@ -60,9 +67,7 @@ export default class Formatter {
     const keys = Object.keys(fields);
     const result: Record<string, string> = {};
     keys.map((key, index) => {
-      const linkify = index == 0 && this.settings.linkify && !note.isCloze();
-      const field = linkify ? `[[${fields[key]}]]` : fields[key];
-      const markdown = this.markdown(field);
+      const markdown = this.markdown(fields[key]);
       result[key] = this.settings.render ? this.html(markdown, index) : markdown;
     });
     return result;

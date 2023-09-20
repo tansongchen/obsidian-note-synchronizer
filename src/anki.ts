@@ -13,7 +13,7 @@ interface Response<R = null> {
   result: R;
 }
 
-export class AnkiError extends Error {}
+export class AnkiError extends Error { }
 
 export interface Note {
   deckName: string;

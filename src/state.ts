@@ -17,8 +17,6 @@ abstract class State<K, V, I = undefined> extends Map<K, V> {
   }
 
   async change(state: Map<K, V | [V, I]>) {
-    const _keys = [...this.keys()];
-    const keys = [...state.keys()];
     for (const [key, wrap] of state.entries()) {
       if (Array.isArray(wrap)) {
         const [value, info] = wrap;
@@ -29,6 +27,10 @@ abstract class State<K, V, I = undefined> extends Map<K, V> {
         this.set(key, wrap);
       }
     }
+
+    // delete all the keys not in the new state
+    const _keys = [...this.keys()];
+    const keys = [...state.keys()];
     for (const key of _keys.filter(x => !keys.includes(x))) {
       this.delete(key);
     }
@@ -106,15 +108,12 @@ export class NoteState extends State<number, NoteDigest, Note> {
     const current = this.get(key);
     if (!current) return;
     if (current.deck !== value.deck) {
-      // updating deck
       this.updateDeck(key, current, value, info);
     }
     if (current.hash !== value.hash) {
-      // updating fields
       this.updateFields(key, current, value, info);
     }
     if (current.tags !== value.tags) {
-      // updating tags
       this.updateTags(key, current, value, info);
     }
   }

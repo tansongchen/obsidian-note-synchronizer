@@ -29,6 +29,9 @@ export default class AnkiSynchronizerSettingTab extends PluginSettingTab {
     this.containerEl.empty();
     this.containerEl.createEl('h2', { text: locale.settingTabHeader });
 
+    // TODO: create setting,
+    // - one for syncing every n seconds
+    // - one for caching the media (to speed up)
     new Setting(this.containerEl)
       .setName(locale.settingRenderName)
       .setDesc(locale.settingRenderDescription)

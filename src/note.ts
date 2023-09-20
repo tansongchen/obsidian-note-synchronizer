@@ -92,7 +92,7 @@ export class NoteManager {
     const body = lines.slice(yamlEndIndex + 1);
     const noteType = noteTypes.get(frontMatter.mid);
     if (!noteType) return [undefined, undefined];
-    const [fields, mediaNameMap] = this.parseFields(file.basename, noteType, body, media);
+    const [fields, mediaNameMap] = this.parseFields(file.basename, noteType, body, media, frontmatter.header);
     if (!fields) return [undefined, undefined];
     // now it is a valid Note
     const basename = file.basename;
@@ -100,16 +100,28 @@ export class NoteManager {
     return [new Note(basename, folder, noteType.name, frontMatter, fields), mediaNameMap];
   }
 
+  chooseHeader(isCloze: boolean, title: string, header: string | undefined): string[] {
+    if (isCloze)
+      return [];
+
+    if (this.settings.linkify)
+      title = `[[${title}]]`;
+    if (header != undefined)
+      return [header + '\n\n' + title]
+    return [title]
+  }
+
   parseFields(
     title: string,
     noteType: NoteTypeDigest,
     body: string[],
-    media: EmbedCache[] | undefined
+    media: EmbedCache[] | undefined,
+    header: string | undefined
   ): [Record<string, string> | undefined, MediaNameMap[] | undefined] {
     const fieldNames = noteType.fieldNames;
     const headingLevel = this.settings.headingLevel;
     const isCloze = noteType.name === "填空题" || noteType.name === "Cloze";
-    const fieldContents: string[] = isCloze ? [] : [title];
+    const fieldContents: string[] = this.chooseHeader(isCloze, title, header)
     const mediaNameMap: MediaNameMap[] = [];
     let buffer: string[] = [];
     let mediaCount = 0;

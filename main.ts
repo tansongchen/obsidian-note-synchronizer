@@ -143,6 +143,8 @@ export default class AnkiSynchronizer extends Plugin {
       const media = this.app.metadataCache.getFileCache(file)?.embeds;
       if (media) {
         for (const item of media) {
+          // TODO: add option to make media only of updated card
+          // this should speed up the whole process
           this.noteState.handleAddMedia(
             this.mediaManager.parseMedia(item, this.app.vault, this.app.metadataCache)
           );
