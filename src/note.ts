@@ -26,13 +26,15 @@ export default class Note {
   fields: Record<string, string>;
   typeName: string;
   extras: object;
+  hash: string;
 
   constructor(
     basename: string,
     folder: string,
     typeName: string,
     frontMatter: FrontMatter,
-    fields: Record<string, string>
+    fields: Record<string, string>,
+    hash: string
   ) {
     this.basename = basename;
     this.folder = folder;
@@ -43,12 +45,13 @@ export default class Note {
     this.tags = tags;
     this.extras = extras;
     this.fields = fields;
+    this.hash = hash;
   }
 
   digest(): NoteDigest {
     return {
       deck: this.renderDeckName(),
-      hash: MD5(this.fields),
+      hash: this.hash,
       tags: this.tags
     };
   }
@@ -58,13 +61,18 @@ export default class Note {
   }
 
   renderDeckName() {
-    return this.folder.replace(/\//g, "::") || "Obsidian";
+    return renderDeckName(this.folder)
   }
 
   isCloze() {
     return this.typeName === "填空题" || this.typeName === "Cloze";
   }
 }
+
+export function renderDeckName(folder: string) {
+  return folder.replace(/\//g, "::") || "Obsidian";
+}
+
 
 export class NoteManager {
   private settings: Settings;
@@ -87,7 +95,9 @@ export class NoteManager {
     )
       return [undefined, undefined];
     const frontMatter = Object.assign({}, frontmatter, { position: undefined }) as FrontMatter;
+    const hash = MD5(content);
     const lines = content.split("\n");
+
     const yamlEndIndex = lines.indexOf("---", 1);
     const body = lines.slice(yamlEndIndex + 1);
     const noteType = noteTypes.get(frontMatter.mid);
@@ -97,7 +107,7 @@ export class NoteManager {
     // now it is a valid Note
     const basename = file.basename;
     const folder = file.parent.path == '/' ? '' : file.parent.path;
-    return [new Note(basename, folder, noteType.name, frontMatter, fields), mediaNameMap];
+    return [new Note(basename, folder, noteType.name, frontMatter, fields, hash), mediaNameMap];
   }
 
   chooseHeader(isCloze: boolean, title: string, header: string | undefined): string[] {

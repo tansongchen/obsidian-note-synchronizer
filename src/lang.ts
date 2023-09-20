@@ -27,6 +27,12 @@ interface Locale {
   settingHighlightAsClozeDescription: string;
   settingHeadingLevelName: string;
   settingHeadingLevelDescription: string;
+  settingRubberIconSyncName: string;
+  settingRubberIconSyncDescription: string;
+  settingRubberIconImportName: string;
+  settingRubberIconImportDescription: string;
+  settingTimerName: string;
+  settingTimerDescription: string;
 }
 
 const en: Locale = {
@@ -56,7 +62,13 @@ const en: Locale = {
   settingHighlightAsClozeDescription: 'Enable using Obsidian highlights (==...==) for Anki clozes',
   settingHeadingLevelName: 'Field name heading level',
   settingHeadingLevelDescription:
-    'Which level (h1, h2, h3, ...) to use for field names when generating the note template'
+    'Which level (h1, h2, h3, ...) to use for field names when generating the note template',
+  settingRubberIconSyncName: 'Sync Icon',
+  settingRubberIconSyncDescription: 'Toggle Sync Icon on the menu (the change will be visible after a reload)',
+  settingRubberIconImportName: 'Import Icon',
+  settingRubberIconImportDescription: 'Toggle Import Icon on the menu (the change will be visible after a reload)',
+  settingTimerName: 'Auto Sync',
+  settingTimerDescription: 'Set 0 to no set no auto sync, else set the number of minute to wait before the auto sync.',
 };
 
 const zh_cn: Locale = {

@@ -5,6 +5,7 @@ import Media from './media';
 import Anki from './anki';
 import Formatter from './format';
 import locale from './lang';
+import { MD5 } from 'object-hash';
 
 abstract class State<K, V, I = undefined> extends Map<K, V> {
   protected plugin: AnkiSynchronizer;
@@ -77,7 +78,8 @@ export class NoteTypeState extends State<number, NoteTypeDigest> {
       this.templateFolderPath!,
       value.name,
       pseudoFrontMatter,
-      pseudoFields
+      pseudoFields,
+      MD5(pseudoFrontMatter)
     );
     const templatePath = `${this.templateFolderPath}/${value.name}.md`;
     const maybeTemplate = this.plugin.app.vault.getAbstractFileByPath(templatePath);
@@ -95,7 +97,7 @@ export class NoteTypeState extends State<number, NoteTypeDigest> {
 
 export type NoteDigest = { deck: string; hash: string; tags: string[] };
 
-export class NoteState extends State<number, NoteDigest, Note> {
+export class NoteState extends State<number, NoteDigest, Note | undefined> {
   private formatter: Formatter;
 
   constructor(plugin: AnkiSynchronizer) {
@@ -104,9 +106,10 @@ export class NoteState extends State<number, NoteDigest, Note> {
   }
 
   // Existing notes may have 3 things to update: deck, fields, tags
-  async update(key: number, value: NoteDigest, info: Note) {
+  async update(key: number, value: NoteDigest, info: Note | undefined) {
     const current = this.get(key);
     if (!current) return;
+    if (info == undefined) return;
     if (current.deck !== value.deck) {
       this.updateDeck(key, current, value, info);
     }
