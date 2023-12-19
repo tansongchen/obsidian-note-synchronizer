@@ -72,6 +72,12 @@ const en: Locale = {
 };
 
 const zh_cn: Locale = {
+  settingRubberIconSyncName: '同步图标' ,
+  settingRubberIconSyncDescription: '在菜单上切换同步图标（更改后需重新加载后可见）' ,
+  settingRubberIconImportName: '导入图标' ,
+  settingRubberIconImportDescription: '在菜单上切换导入图标（更改后需重新加载后可见）' ,
+  settingTimerName: '自动同步', 
+  settingTimerDescription: '设置为0则不进行自动同步，否则设置自动同步前等待的分钟数。' ,
   onLoad: '笔记同步插件已成功启用！',
   onUnload: '笔记同步插件已成功禁用！',
   synchronizeCommandName: '同步',
