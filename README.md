@@ -59,12 +59,21 @@ date: {{date}} {{time}}
 
 Where `mid` is a number representing the note type ID in Anki. If this note type happen to have 3 or more fields, the third field and all other fields after that will appear as `h1` title in the markdown file.
 
+
 ### Edit Notes
 
 When creating notes with generated template files, please write the content of the first field into the filename, and the second field right after the YAML front matter, and other fields below their corresponding `h1` title.
 
 The way that notes are organized in Obsidian will be mirrored in Anki using decks. For example, the file `/learning/note.md` will be synced to the `learning` deck in Anki, and the file `/learning/project 1/note.md` will be synced to `learning::project 1` deck in Anki. Toplevel files will be synced to a special deck `Obsidian`. If the supposed deck doesn't exist in Anki, it will be created.
 
-### Synchonize notes
+### Synchronize notes
 
-Run command `Synchronize`. If unexpected behavior happens, please toggle the developer console and report the output there.
+Run command `Synchronize`. If unexpected behavior happens, please toggle the developer console and report the output there. 
+
+Also there is the feature to set an Interval in witch the synchronize is performed.
+
+
+### Header
+
+The default header of non Cloze card, is the file name of the card.
+If `header` propriety is defined then this would be the new header.

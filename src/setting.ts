@@ -8,13 +8,20 @@ export interface Settings {
   linkify: boolean;
   headingLevel: number;
   highlightAsCloze: boolean;
+  showSyncIcon: boolean;
+  showImportIcon: boolean;
+  autoSync: number;
 }
+
 
 export const DEFAULT_SETTINGS: Settings = {
   render: true,
   linkify: true,
   headingLevel: 1,
-  highlightAsCloze: false
+  highlightAsCloze: false,
+  showImportIcon: true,
+  showSyncIcon: true,
+  autoSync: 0,
 };
 
 export default class AnkiSynchronizerSettingTab extends PluginSettingTab {
@@ -35,6 +42,7 @@ export default class AnkiSynchronizerSettingTab extends PluginSettingTab {
       .addToggle(v =>
         v.setValue(this.plugin.settings.render).onChange(async value => {
           this.plugin.settings.render = value;
+          await this.plugin.save()
         })
       );
 
@@ -44,6 +52,7 @@ export default class AnkiSynchronizerSettingTab extends PluginSettingTab {
       .addToggle(v =>
         v.setValue(this.plugin.settings.linkify).onChange(async value => {
           this.plugin.settings.linkify = value;
+          await this.plugin.save()
         })
       );
 
@@ -53,8 +62,46 @@ export default class AnkiSynchronizerSettingTab extends PluginSettingTab {
       .addToggle(v =>
         v.setValue(this.plugin.settings.highlightAsCloze).onChange(async value => {
           this.plugin.settings.highlightAsCloze = value;
+          await this.plugin.save()
         })
       );
+
+    new Setting(this.containerEl)
+      .setName(locale.settingRubberIconImportName)
+      .setDesc(locale.settingRubberIconImportDescription)
+      .addToggle(v =>
+        v.setValue(this.plugin.settings.showImportIcon).onChange(async value => {
+          this.plugin.settings.showImportIcon = value;
+          await this.plugin.save()
+        })
+      );
+
+    new Setting(this.containerEl)
+      .setName(locale.settingRubberIconSyncName)
+      .setDesc(locale.settingRubberIconSyncDescription)
+      .addToggle(v =>
+        v.setValue(this.plugin.settings.showSyncIcon).onChange(async value => {
+          this.plugin.settings.showSyncIcon = value;
+          await this.plugin.save()
+        })
+      );
+
+    new Setting(this.containerEl)
+      .setName(locale.settingTimerName)
+      .setDesc(locale.settingTimerDescription)
+      .addText(v =>
+        v.setValue(this.plugin.settings.autoSync.toString()).onChange(async value => {
+          const parsed = parseInt(value.trim())
+          if (!isNaN(parsed)) {
+            this.plugin.settings.autoSync = parsed;
+          } else {
+            this.plugin.settings.autoSync = 0;
+            value = '0';
+          }
+          this.plugin.startNewInterval()
+          await this.plugin.save()
+        })
+      )
 
     new Setting(this.containerEl)
       .setName(locale.settingHeadingLevelName)
@@ -72,7 +119,9 @@ export default class AnkiSynchronizerSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.headingLevel.toString())
           .onChange(async value => {
             this.plugin.settings.headingLevel = parseInt(value);
+            await this.plugin.save()
           })
       );
+
   }
 }

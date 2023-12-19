@@ -1,4 +1,5 @@
 import { EmbedCache, MetadataCache, Vault, parseLinktext } from 'obsidian';
+import path from 'path';
 
 export default class Media {
   filename: string;
@@ -20,10 +21,9 @@ export class MediaManager {
     );
     if (!mediaFile) mediaFile = metadataCache.getFirstLinkpathDest(file_path, file_path);
 
-    // @ts-ignore
-    const mediaAbsPath = vault.adapter.basePath + '\\' + mediaFile?.path.replace('/', '\\');
+    // @ts-ignore 
+    const mediaAbsPath = vault.adapter.basePath + path.sep + mediaFile?.path.replace('/', path.sep);
     const mediaName = item.link.split('/').pop() as string;
-
     return new Media(mediaName, mediaAbsPath);
   }
 }

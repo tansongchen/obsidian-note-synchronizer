@@ -27,6 +27,12 @@ interface Locale {
   settingHighlightAsClozeDescription: string;
   settingHeadingLevelName: string;
   settingHeadingLevelDescription: string;
+  settingRubberIconSyncName: string;
+  settingRubberIconSyncDescription: string;
+  settingRubberIconImportName: string;
+  settingRubberIconImportDescription: string;
+  settingTimerName: string;
+  settingTimerDescription: string;
 }
 
 const en: Locale = {
@@ -56,10 +62,22 @@ const en: Locale = {
   settingHighlightAsClozeDescription: 'Enable using Obsidian highlights (==...==) for Anki clozes',
   settingHeadingLevelName: 'Field name heading level',
   settingHeadingLevelDescription:
-    'Which level (h1, h2, h3, ...) to use for field names when generating the note template'
+    'Which level (h1, h2, h3, ...) to use for field names when generating the note template',
+  settingRubberIconSyncName: 'Sync Icon',
+  settingRubberIconSyncDescription: 'Toggle Sync Icon on the menu (the change will be visible after a reload)',
+  settingRubberIconImportName: 'Import Icon',
+  settingRubberIconImportDescription: 'Toggle Import Icon on the menu (the change will be visible after a reload)',
+  settingTimerName: 'Auto Sync',
+  settingTimerDescription: 'Set 0 to no set no auto sync, else set the number of minute to wait before the auto sync.',
 };
 
 const zh_cn: Locale = {
+  settingRubberIconSyncName: '同步图标' ,
+  settingRubberIconSyncDescription: '在菜单上切换同步图标（更改后需重新加载后可见）' ,
+  settingRubberIconImportName: '导入图标' ,
+  settingRubberIconImportDescription: '在菜单上切换导入图标（更改后需重新加载后可见）' ,
+  settingTimerName: '自动同步', 
+  settingTimerDescription: '设置为0则不进行自动同步，否则设置自动同步前等待的分钟数。' ,
   onLoad: '笔记同步插件已成功启用！',
   onUnload: '笔记同步插件已成功禁用！',
   synchronizeCommandName: '同步',
