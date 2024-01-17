@@ -45,8 +45,8 @@ export default class Formatter {
   }
 
   convertMathDelimiter(markdown: string) {
-    markdown = markdown.replace(/\$(.+?)\$/g, '\\\\($1\\\\)');
-    markdown = markdown.replace(/\$\$(.+?)\$\$/gs, '\\\\[$1\\\\]');
+    markdown = markdown.replace(/\$(.+?)\$/g, '<anki-mathjax>$1</anki-mathjax>');
+    markdown = markdown.replace(/\$\$(.+?)\$\$/gs, '<anki-mathjax block="true">$1</anki-mathjax>');
     return markdown;
   }
 
