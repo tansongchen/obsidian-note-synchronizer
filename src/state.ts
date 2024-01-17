@@ -113,7 +113,10 @@ export class NoteState extends State<number, NoteDigest, Note> {
       // updating fields
       this.updateFields(key, current, value, info);
     }
-    if (current.tags !== value.tags) {
+    // Check for null case
+    if (current.tags === null) current.tags = [];
+    if (value.tags === null) value.tags = [];
+    if (current.tags.length !== value.tags.length || current.tags.some((item, index) => item !== value.tags[index])) {
       // updating tags
       this.updateTags(key, current, value, info);
     }
@@ -152,20 +155,11 @@ export class NoteState extends State<number, NoteDigest, Note> {
   }
 
   async updateTags(key: number, current: NoteDigest, nextValue: NoteDigest, note: Note) {
-    const tagsToAdd = note.tags.filter(x => !current.tags.contains(x));
-    const tagsToRemove = current.tags.filter(x => !note.tags.contains(x));
-    let addTagsResponse = null,
-      removeTagsResponse = null;
-    if (tagsToAdd.length) {
-      console.log(`Adding tags for ${note.title()}`, tagsToAdd);
-      addTagsResponse = await this.anki.addTagsToNotes([note.nid], tagsToAdd);
-    }
-    if (tagsToRemove.length) {
-      console.log(`Removing tags for ${note.title()}`, tagsToRemove);
-      removeTagsResponse = await this.anki.removeTagsFromNotes([note.nid], tagsToRemove);
-    }
-    if (addTagsResponse || removeTagsResponse)
-      new Notice(locale.synchronizeUpdateTagsFailureNotice(note.title()));
+    let updateTagsResponse = null;
+    console.log(`Update tags for ${note.title()}`, note.tags);
+    updateTagsResponse = await this.anki.updateNoteTags(note.nid, note.tags);
+    if (updateTagsResponse)
+      new Notice(locale.synchronizeUpdateTagsFailureNotice(note.title()));;
   }
 
   delete(key: number) {
