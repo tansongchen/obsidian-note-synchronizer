@@ -156,7 +156,7 @@ export class NoteState extends State<number, NoteDigest, Note> {
 
   async updateTags(key: number, current: NoteDigest, nextValue: NoteDigest, note: Note) {
     let updateTagsResponse = null;
-    console.log(`Update tags for ${note.title()}`, note.tags);
+    console.log(`Updating tags for ${note.title()}`, note.tags);
     updateTagsResponse = await this.anki.updateNoteTags(note.nid, note.tags);
     if (updateTagsResponse)
       new Notice(locale.synchronizeUpdateTagsFailureNotice(note.title()));
