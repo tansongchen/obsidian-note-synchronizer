@@ -42,17 +42,17 @@ export default class AnkiSynchronizer extends Plugin {
   configureUI() {
     // Add import note types command
     this.addCommand({
-      id: "import",
+      id: 'import',
       name: locale.importCommandName,
-      callback: async () => await this.importNoteTypes(),
+      callback: async () => await this.importNoteTypes()
     });
     this.addRibbonIcon('enter', locale.importCommandName, async () => await this.importNoteTypes());
 
     // Add synchronize command
     this.addCommand({
-      id: "synchronize",
+      id: 'synchronize',
       name: locale.synchronizeCommandName,
-      callback: async () => await this.synchronize(),
+      callback: async () => await this.synchronize()
     });
     this.addRibbonIcon(
       'sheets-in-box',
@@ -70,7 +70,7 @@ export default class AnkiSynchronizer extends Plugin {
       version: version,
       settings: this.settings,
       noteState: Object.fromEntries(this.noteState),
-      noteTypeState: Object.fromEntries(this.noteTypeState),
+      noteTypeState: Object.fromEntries(this.noteTypeState)
     });
   }
 
@@ -81,7 +81,7 @@ export default class AnkiSynchronizer extends Plugin {
 
   // Retrieve template information from Obsidian core plugin "Templates"
   getTemplatePath() {
-    const templatesPlugin = (this.app as any).internalPlugins?.plugins["templates"];
+    const templatesPlugin = (this.app as any).internalPlugins?.plugins['templates'];
     if (!templatesPlugin?.enabled) {
       new Notice(locale.templatesNotEnabledNotice);
       return;
@@ -132,6 +132,7 @@ export default class AnkiSynchronizer extends Plugin {
     if (templatesPath === undefined) return;
     new Notice(locale.synchronizeStartNotice);
     const allFiles = this.app.vault.getMarkdownFiles();
+
     const state = new Map<number, [NoteDigest, Note]>();
     for (const file of allFiles) {
       // ignore templates
@@ -141,21 +142,22 @@ export default class AnkiSynchronizer extends Plugin {
       const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
       if (!frontmatter) continue;
       const media = this.app.metadataCache.getFileCache(file)?.embeds;
-      if (media) {
-        for (const item of media) {
-          this.noteState.handleAddMedia(
-            this.mediaManager.parseMedia(item, this.app.vault, this.app.metadataCache)
-          );
-        }
-      }
       const [note, mediaNameMap] = this.noteManager.validateNote(
         file,
         frontmatter,
         content,
         media,
         this.noteTypeState
-      );
-      if (!note) continue;
+        );
+        if (!note) continue;
+        if (media) {
+          for (const item of media) {
+            this.noteState.handleAddMedia(
+              this.mediaManager.parseMedia(item, this.app.vault, this.app.metadataCache)
+            );
+          }
+        }
+      console.log({note})
       if (note.nid === 0) {
         // new file
         const nid = await this.noteState.handleAddNote(note);

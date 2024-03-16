@@ -114,10 +114,10 @@ class Anki {
       }
     });
   }
-	
+
   async updateNoteTags(noteId: number, tags: string[]) {
-    const tagstring = tags.map(item => item.replace(/\//g, "::")).join(" ");
-    return this.invoke("updateNoteTags", {
+    const tagstring = tags.map(item => item.replace(/\//g, '::')).join(' ');
+    return this.invoke('updateNoteTags', {
       note: noteId,
       tags: tagstring
     });

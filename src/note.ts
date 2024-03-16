@@ -1,10 +1,22 @@
-import { stringifyYaml, FrontMatterCache, TFile, EmbedCache } from "obsidian";
-import { NoteDigest, NoteTypeDigest } from "./state";
-import { MD5 } from "object-hash";
-import { Settings } from "./setting";
+import { stringifyYaml, FrontMatterCache, TFile, EmbedCache } from 'obsidian';
+import { NoteDigest, NoteTypeDigest } from './state';
+import { MD5 } from 'object-hash';
+import { Settings } from './setting';
 
-const PICTURE_EXTENSION = ["png", "jpg", "jpeg", "gif", "bmp", "svg"];
-const VIDEO_EXTENSION = ["mp3", "wav", "m4a", "ogg", "3gp", "flac", "mp4", "ogv", "mov", "mkv", "webm"];
+const PICTURE_EXTENSION = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg'];
+const VIDEO_EXTENSION = [
+  'mp3',
+  'wav',
+  'm4a',
+  'ogg',
+  '3gp',
+  'flac',
+  'mp4',
+  'ogv',
+  'mov',
+  'mkv',
+  'webm'
+];
 
 export interface MediaNameMap {
   obsidian: string;
@@ -58,11 +70,11 @@ export default class Note {
   }
 
   renderDeckName() {
-    return this.folder.replace(/\//g, "::") || "Obsidian";
+    return this.folder.replace(/\//g, '::') || 'Obsidian';
   }
 
   isCloze() {
-    return this.typeName === "填空题" || this.typeName === "Cloze";
+    return this.typeName === '填空题' || this.typeName === 'Cloze';
   }
 }
 
@@ -87,8 +99,8 @@ export class NoteManager {
     )
       return [undefined, undefined];
     const frontMatter = Object.assign({}, frontmatter, { position: undefined }) as FrontMatter;
-    const lines = content.split("\n");
-    const yamlEndIndex = lines.indexOf("---", 1);
+    const lines = content.split('\n');
+    const yamlEndIndex = lines.indexOf('---', 1);
     const body = lines.slice(yamlEndIndex + 1);
     const noteType = noteTypes.get(frontMatter.mid);
     if (!noteType) return [undefined, undefined];
@@ -108,7 +120,7 @@ export class NoteManager {
   ): [Record<string, string> | undefined, MediaNameMap[] | undefined] {
     const fieldNames = noteType.fieldNames;
     const headingLevel = this.settings.headingLevel;
-    const isCloze = noteType.name === "填空题" || noteType.name === "Cloze";
+    const isCloze = noteType.name === '填空题' || noteType.name === 'Cloze';
     const fieldContents: string[] = isCloze ? [] : [title];
     const mediaNameMap: MediaNameMap[] = [];
     let buffer: string[] = [];
@@ -174,13 +186,13 @@ export class NoteManager {
     const lines = [`---`, frontMatter, `---`];
     if (note.isCloze()) {
       lines.push(note.fields[fieldNames[0]]);
-      fieldNames.slice(1).map((s) => {
-        lines.push(`${"#".repeat(this.settings.headingLevel)} ${s}`, note.fields[s]);
+      fieldNames.slice(1).map(s => {
+        lines.push(`${'#'.repeat(this.settings.headingLevel)} ${s}`, note.fields[s]);
       });
     } else {
       lines.push(note.fields[fieldNames[1]]);
-      fieldNames.slice(2).map((s) => {
-        lines.push(`${"#".repeat(this.settings.headingLevel)} ${s}`, note.fields[s]);
+      fieldNames.slice(2).map(s => {
+        lines.push(`${'#'.repeat(this.settings.headingLevel)} ${s}`, note.fields[s]);
       });
     }
 

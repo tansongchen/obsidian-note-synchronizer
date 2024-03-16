@@ -116,7 +116,10 @@ export class NoteState extends State<number, NoteDigest, Note> {
     // Check for null case
     if (current.tags === null) current.tags = [];
     if (value.tags === null) value.tags = [];
-    if (current.tags.length !== value.tags.length || current.tags.some((item, index) => item !== value.tags[index])) {
+    if (
+      current.tags.length !== value.tags.length ||
+      current.tags.some((item, index) => item !== value.tags[index])
+    ) {
       // updating tags
       this.updateTags(key, current, value, info);
     }
@@ -158,8 +161,7 @@ export class NoteState extends State<number, NoteDigest, Note> {
     let updateTagsResponse = null;
     console.log(`Updating tags for ${note.title()}`, note.tags);
     updateTagsResponse = await this.anki.updateNoteTags(note.nid, note.tags);
-    if (updateTagsResponse)
-      new Notice(locale.synchronizeUpdateTagsFailureNotice(note.title()));
+    if (updateTagsResponse) new Notice(locale.synchronizeUpdateTagsFailureNotice(note.title()));
   }
 
   delete(key: number) {
