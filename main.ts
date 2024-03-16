@@ -132,6 +132,7 @@ export default class AnkiSynchronizer extends Plugin {
     if (templatesPath === undefined) return;
     new Notice(locale.synchronizeStartNotice);
     const allFiles = this.app.vault.getMarkdownFiles();
+
     const state = new Map<number, [NoteDigest, Note]>();
     for (const file of allFiles) {
       // ignore templates
@@ -141,21 +142,22 @@ export default class AnkiSynchronizer extends Plugin {
       const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
       if (!frontmatter) continue;
       const media = this.app.metadataCache.getFileCache(file)?.embeds;
-      if (media) {
-        for (const item of media) {
-          this.noteState.handleAddMedia(
-            this.mediaManager.parseMedia(item, this.app.vault, this.app.metadataCache)
-          );
-        }
-      }
       const [note, mediaNameMap] = this.noteManager.validateNote(
         file,
         frontmatter,
         content,
         media,
         this.noteTypeState
-      );
-      if (!note) continue;
+        );
+        if (!note) continue;
+        if (media) {
+          for (const item of media) {
+            this.noteState.handleAddMedia(
+              this.mediaManager.parseMedia(item, this.app.vault, this.app.metadataCache)
+            );
+          }
+        }
+      console.log({note})
       if (note.nid === 0) {
         // new file
         const nid = await this.noteState.handleAddNote(note);
