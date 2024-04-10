@@ -29,9 +29,9 @@ export interface Note {
 class Anki {
   private port = 8765;
 
-  async invoke<R = null, P = undefined>(action: string, params: P): Promise<R | AnkiError> {
-    type requestType = Request<P>;
-    type responseType = Response<R>;
+  async invoke<Return = null, Params = undefined>(action: string, params: Params): Promise<Return | AnkiError> {
+    type requestType = Request<Params>;
+    type responseType = Response<Return>;
     const request: requestType = {
       action: action,
       version: 6,
@@ -84,10 +84,27 @@ class Anki {
     });
   }
 
+  async findNotes(query: string) {
+    return this.invoke<number[], { query: string }>('findNotes', {
+      query: query
+    });
+  }
+
+
   async notesInfo(noteIds: number[]) {
-    return this.invoke<{ cards: number[] }[], { notes: number[] }>('notesInfo', {
+    return this.invoke<{ cards: number[], tags: string[], noteId: string }[], { notes: number[] }>('notesInfo', {
       notes: noteIds
     });
+  }
+
+  async notesInfoByDeck(deck: string): Promise<any> {
+    const notesIds = await this.findNotes(`deck:${deck}`);
+    if (notesIds instanceof AnkiError) {
+      return notesIds;
+    }
+    return await this.notesInfo(notesIds);
+
+
   }
 
   // write-only
