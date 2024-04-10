@@ -16,22 +16,24 @@ abstract class State<K, V, I = undefined> extends Map<K, V> {
     this.anki = plugin.anki;
   }
 
-  async change(state: Map<K, V | [V, I]>) {
-    const _keys = [...this.keys()];
-    const keys = [...state.keys()];
-    for (const [key, wrap] of state.entries()) {
-      if (Array.isArray(wrap)) {
-        const [value, info] = wrap;
-        await this.update(key, value, info);
-        this.set(key, value);
+  async change(newState: Map<K, V | [V, I]>) {
+    const existingKeys = [...this.keys()];
+    const newKeys = [...newState.keys()];
+
+    // Iterate over the new state
+    for (const [key, value] of newState.entries()) {
+      if (Array.isArray(value)) {
+        const [digest, info] = value;
+        await this.update(key, digest, info);
+        this.set(key, digest);
       } else {
-        await this.update(key, wrap);
-        this.set(key, wrap);
+        await this.update(key, value);
+        this.set(key, value);
       }
     }
-    for (const key of _keys.filter(x => !keys.includes(x))) {
-      this.delete(key);
-    }
+    // for (const key of existingKeys.filter(x => !newKeys.includes(x))) {
+    //   this.delete(key);
+    // }
   }
 
   abstract update(key: K, value: V, info?: I): Promise<void>;
@@ -58,7 +60,7 @@ export class NoteTypeState extends State<number, NoteTypeDigest> {
     return super.delete(key);
   }
 
-  async update(key: number, value: NoteTypeDigest) {
+  async update(key: number, digest: NoteTypeDigest) {
     if (this.has(key)) {
       this.delete(key);
     }
@@ -69,15 +71,15 @@ export class NoteTypeState extends State<number, NoteTypeDigest> {
       date: '{{date}} {{time}}'
     } as FrontMatter;
     const pseudoFields: Record<string, string> = {};
-    value.fieldNames.map(x => (pseudoFields[x] = '\n\n'));
+    digest.fieldNames.map(x => (pseudoFields[x] = '\n\n'));
     const templateNote = new Note(
-      value.name,
+      digest.name,
       this.templateFolderPath!,
-      value.name,
+      digest.name,
       pseudoFrontMatter,
       pseudoFields
     );
-    const templatePath = `${this.templateFolderPath}/${value.name}.md`;
+    const templatePath = `${this.templateFolderPath}/${digest.name}.md`;
     const maybeTemplate = this.plugin.app.vault.getAbstractFileByPath(templatePath);
     if (maybeTemplate !== null) {
       await this.plugin.app.vault.modify(
@@ -102,29 +104,34 @@ export class NoteState extends State<number, NoteDigest, Note> {
   }
 
   // Existing notes may have 3 things to update: deck, fields, tags
-  async update(key: number, value: NoteDigest, info: Note) {
+  async update(key: number, digest: NoteDigest, info: Note) {    
+
     const current = this.get(key);
     if (!current) return;
-    if (current.deck !== value.deck) {
+    if (current.deck !== digest.deck) {
       // updating deck
-      this.updateDeck(key, current, value, info);
+      this.updateDeck(info);
     }
-    if (current.hash !== value.hash) {
+    if (current.hash !== digest.hash) {
       // updating fields
-      this.updateFields(key, current, value, info);
+      this.updateFields(info);
     }
     // Check for null case
     if (current.tags === null) current.tags = [];
-    if (value.tags === null) value.tags = [];
-    if (current.tags.length !== value.tags.length || current.tags.some((item, index) => item !== value.tags[index])) {
+    if (digest.tags === null) digest.tags = [];
+    if (
+      current.tags.length !== digest.tags.length ||
+      current.tags.some((item, index) => item !== digest.tags[index])
+    ) {
       // updating tags
-      this.updateTags(key, current, value, info);
+      this.updateTags(info);
     }
   }
 
-  async updateDeck(key: number, current: NoteDigest, value: NoteDigest, note: Note) {
+  async updateDeck(note: Note) {
     const deck = note.renderDeckName();
     const notesInfoResponse = await this.anki.notesInfo([note.nid]);
+
     if (!Array.isArray(notesInfoResponse)) {
       return;
     }
@@ -146,7 +153,7 @@ export class NoteState extends State<number, NoteDigest, Note> {
     new Notice(locale.synchronizeChangeDeckFailureNotice(note.title()));
   }
 
-  async updateFields(key: number, current: NoteDigest, value: NoteDigest, note: Note) {
+  async updateFields(note: Note) {
     const fields = this.formatter.format(note);
     console.log(`Updating fields for ${note.title()}`, fields);
     const updateFieldsResponse = await this.anki.updateFields(note.nid, fields);
@@ -154,12 +161,11 @@ export class NoteState extends State<number, NoteDigest, Note> {
     new Notice(locale.synchronizeUpdateFieldsFailureNotice(note.title()));
   }
 
-  async updateTags(key: number, current: NoteDigest, nextValue: NoteDigest, note: Note) {
+  async updateTags(note: Note) {
     let updateTagsResponse = null;
     console.log(`Updating tags for ${note.title()}`, note.tags);
     updateTagsResponse = await this.anki.updateNoteTags(note.nid, note.tags);
-    if (updateTagsResponse)
-      new Notice(locale.synchronizeUpdateTagsFailureNotice(note.title()));
+    if (updateTagsResponse) new Notice(locale.synchronizeUpdateTagsFailureNotice(note.title()));
   }
 
   delete(key: number) {
